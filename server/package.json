@@ -7,7 +7,8 @@
   "scripts": {
     "init-db": "node scripts/init-db.js",
     "reset-db": "node scripts/reset-db.js && node scripts/init-db.js",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage"
   },
   "author": "",
   "contributors": [
