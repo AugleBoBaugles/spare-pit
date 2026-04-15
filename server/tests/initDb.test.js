@@ -35,3 +35,26 @@ test('creates tools table', async () => {
   await db.close();
 });
 
+test('initDb is idempotent (safe to run multiple times)', async () => {
+    const db1 = await initDb(TEST_DB);
+    await db1.close();
+
+    const db2 = await initDb(TEST_DB);
+    await db2.close();
+
+    // reopen to verify schema is still correct
+    const db = await open({
+        filename: TEST_DB,
+        driver: sqlite3.Database
+    });
+
+    const table = await db.get(`
+        SELECT name FROM sqlite_master 
+        WHERE type='table' AND name='tools'
+    `);
+
+    expect(table).toBeDefined();
+
+    await db.close();
+});
+
