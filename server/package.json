@@ -5,9 +5,9 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "init-db": "node db/init-db.js",
-    "reset-db": "node db/reset-db.js && node db/init-db.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "init-db": "node scripts/init-db.js",
+    "reset-db": "node scripts/reset-db.js && node scripts/init-db.js",
+    "test": "jest"
   },
   "author": "",
   "contributors": [
@@ -24,5 +24,8 @@
   "dependencies": {
     "sqlite": "^5.1.1",
     "sqlite3": "^6.0.1"
+  },
+  "devDependencies": {
+    "jest": "^30.3.0"
   }
 }
