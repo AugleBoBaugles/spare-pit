@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { resetDb } from '../db/resetDb.js';
+import { deleteDb } from '../db/deleteDb.js';
 
 const TEST_DB = './db/test.db';
 
@@ -14,7 +14,7 @@ test('deletes existing database file', () => {
 
   expect(fs.existsSync(TEST_DB)).toBe(true);
 
-  resetDb(TEST_DB);
+  deleteDb(TEST_DB);
 
   expect(fs.existsSync(TEST_DB)).toBe(false);
 });
@@ -22,7 +22,7 @@ test('deletes existing database file', () => {
 test('does nothing if database does not exist', () => {
   expect(fs.existsSync(TEST_DB)).toBe(false);
 
-  resetDb(TEST_DB);
+  deleteDb(TEST_DB);
 
   expect(fs.existsSync(TEST_DB)).toBe(false);
 });
