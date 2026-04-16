@@ -1,4 +1,4 @@
-# frc-inventory-app
+# Spare Pit
 
 This inventory app was designed by Green River College students Augy Markham and Rebecca Riffle  to help First Robotics Competition teams track and manage inventory.
 
