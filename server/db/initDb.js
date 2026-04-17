@@ -20,6 +20,7 @@ export async function initDb(dbPath = 'db/frc-inventory.db') {
     CREATE TABLE IF NOT EXISTS tools (
       id INTEGER PRIMARY KEY,
       name TEXT NOT NULL,
+      location TEXT,
       status TEXT
     )
   `);
