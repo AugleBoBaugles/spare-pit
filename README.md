@@ -41,9 +41,11 @@ npm i
 ### DB Schema
 ```mermaid
 erDiagram
-    TOOLS 
-    TOOLS {
+    INVENTORY 
+    INVENTORY {
         string name
+        string type
+        string location
         string status
     }
 ```
