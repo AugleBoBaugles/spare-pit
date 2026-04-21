@@ -22,12 +22,12 @@ test('creates database file', async () => {
     await db.close();
 })
 
-test('creates tools table', async () => {
+test('creates inventory table', async () => {
   const db =await initDb(TEST_DB);
 
   const table = await db.get(`
     SELECT name FROM sqlite_master 
-    WHERE type='table' AND name='tools'
+    WHERE type='table' AND name='inventory'
   `);
 
   expect(table).toBeDefined();
@@ -50,7 +50,7 @@ test('initDb is idempotent (safe to run multiple times)', async () => {
 
     const table = await db.get(`
         SELECT name FROM sqlite_master 
-        WHERE type='table' AND name='tools'
+        WHERE type='table' AND name='inventory'
     `);
 
     expect(table).toBeDefined();
