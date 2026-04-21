@@ -11,14 +11,14 @@ This inventory app was designed by Green River College students Augy Markham and
 ### Fork and Clone repo
 Prerequisite: Free GitHub account, code editor such as VS Code
 
-1. Go to the repository: https://github.com/augleBoBaugles/frc-inventory-app  
+1. Go to the repository: https://github.com/AugleBoBaugles/spare-pit  
 2. Click the **Fork** button in the top-right corner to create your own copy of the repo  
 3. In your forked repo, click the green **Code** button and copy the HTTPS URL  
 4. Open a terminal and run:
 
 ```
 git clone <your-forked-repo-url>
-cd frc-inventory-app
+cd spare-pit
 ```
 
 ### Install Dependencies
@@ -26,7 +26,7 @@ cd frc-inventory-app
 cd server
 npm i
 ```
-### Initiialize Inventory Database
+### Initialize Inventory Database
 `npm run init-db`
 ## User Guide
 **Contents**
