@@ -27,7 +27,30 @@ cd server
 npm i
 ```
 ### Initialize Inventory Database
-`npm run init-db`
+```
+npm run init-db
+```
+
+### Start the Server
+```
+npm run dev
+```
+
+The server will start on port 3000. To verify everything is working, open your browser or a tool like Postman and visit:
+
+```
+http://localhost:3000/api/inventory
+```
+
+You should see a JSON response with all inventory items:
+
+```json
+[
+  { "id": 1, "name": "Cordless Drill", "type": "tool", "location": "Tool Cabinet A", "status": "available" },
+  { "id": 2, "name": "Impact Driver", "type": "tool", "location": "Tool Cabinet A", "status": "available" },
+  ...
+]
+```
 ## User Guide
 **Contents**
 
