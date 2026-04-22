@@ -49,3 +49,22 @@ erDiagram
         string status
     }
 ```
+### Server Architecture
+
+Incoming requests travel through a chain of layers, each with a single responsibility:
+
+```
+App -> Routers -> Controllers -> Services -> Models -> DB
+```
+
+**App** (`app.js`) is the entry point. It sets up Express and connects the routers.
+
+**Routers** (`routes/`) define the URL paths (like `GET /api/inventory`) and hand each request off to the right controller.
+
+**Controllers** (`controllers/`) receive the request, call the appropriate service, and send the response back to the client with the right status code (200 for success, 500 if something went wrong).
+
+**Services** (`services/`) contain the business logic. This is where rules like filtering, sorting, or validating data would live.
+
+**Models** (`models/`) are the only layer that talks to the database directly. They contain the SQL queries and return raw results up to the service.
+
+**DB** (`db/db.js`) opens and manages the SQLite database connection.
