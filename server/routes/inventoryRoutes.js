@@ -1,9 +1,8 @@
 import express from 'express';
+import { getAllInventory } from '../controllers/inventoryController.js';
 
 const inventoryRouter = express.Router();
 
-inventoryRouter.get('/inventory', (req, res) => {
-  res.send('Get all inventory items');
-});
+inventoryRouter.get('/inventory', getAllInventory);
 
 export default inventoryRouter;
