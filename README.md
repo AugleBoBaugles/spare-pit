@@ -21,15 +21,28 @@ git clone <your-forked-repo-url>
 cd spare-pit
 ```
 
+### Initialize Inventory Database
+```
+npm run init-db
+```
+---
+### Run Start Script
+*This should be done from the root of the project*
+#### Windows (Command Prompt)
+```
+start.bat
+```
+#### macOS / Linux / Git Bash
+``` 
+./start.sh
+```
+---
 ### Install Dependencies
 ```
 cd server
 npm i
 ```
-### Initialize Inventory Database
-```
-npm run init-db
-```
+
 
 ### Start the Server
 ```
