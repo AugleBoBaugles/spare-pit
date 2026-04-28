@@ -11,7 +11,7 @@ const NAV_ITEMS = [
 ];
 
 function App() {
-  const [activePage, setActivePage] = useState("home");
+  const [activePage, setActivePage] = useState("inventory");
 
   return (
     <>
