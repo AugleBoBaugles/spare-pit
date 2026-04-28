@@ -1,4 +1,5 @@
 import { useState } from "react";
+import './styles/global.css'
 import AddItemPage from "./components/AddItemPage";
 import InventoryPage from "./components/InventoryPage";
 import HomePage from "./components/HomePage";
