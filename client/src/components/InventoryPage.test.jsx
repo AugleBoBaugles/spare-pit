@@ -3,8 +3,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import InventoryPage from '../components/InventoryPage'
 
 // Mock the hook so tests never hit a real server
-vi.mock('../hooks/useInventory')
-import { useInventory } from '../hooks/useInventory'
+vi.mock('../utils/useInventory')
+import { useInventory } from '../utils/useInventory'
 
 const MOCK_TOOLS = [
   { id: 1, name: 'Torque Wrench', type: 'hand', location: 'Bay 1', status: 'in' },
