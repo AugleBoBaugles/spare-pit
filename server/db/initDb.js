@@ -17,9 +17,10 @@ export async function initDb(dbPath = 'db/frc-inventory.db') {
   }
 
   await db.exec(`
-    CREATE TABLE IF NOT EXISTS tools (
+    CREATE TABLE IF NOT EXISTS inventory (
       id INTEGER PRIMARY KEY,
       name TEXT NOT NULL,
+      type TEXT,
       location TEXT,
       status TEXT
     )

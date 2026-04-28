@@ -21,13 +21,49 @@ git clone <your-forked-repo-url>
 cd spare-pit
 ```
 
+### Initialize Inventory Database
+```
+npm run init-db
+```
+---
+### Run Start Script
+*This should be done from the root of the project*
+#### Windows (Command Prompt)
+```
+start.bat
+```
+#### macOS / Linux / Git Bash
+``` 
+./start.sh
+```
+---
 ### Install Dependencies
 ```
 cd server
 npm i
 ```
-### Initialize Inventory Database
-`npm run init-db`
+
+
+### Start the Server
+```
+npm run dev
+```
+
+The server will start on port 3000. To verify everything is working, open your browser or a tool like Postman and visit:
+
+```
+http://localhost:3000/api/inventory
+```
+
+You should see a JSON response with all inventory items:
+
+```json
+[
+  { "id": 1, "name": "Cordless Drill", "type": "tool", "location": "Tool Cabinet A", "status": "available" },
+  { "id": 2, "name": "Impact Driver", "type": "tool", "location": "Tool Cabinet A", "status": "available" },
+  ...
+]
+```
 ## User Guide
 **Contents**
 
@@ -41,9 +77,30 @@ npm i
 ### DB Schema
 ```mermaid
 erDiagram
-    TOOLS 
-    TOOLS {
+    INVENTORY 
+    INVENTORY {
         string name
+        string type
+        string location
         string status
     }
 ```
+### Server Architecture
+
+Incoming requests travel through a chain of layers, each with a single responsibility:
+
+```
+App -> Routers -> Controllers -> Services -> Models -> DB
+```
+
+**App** (`app.js`) is the entry point. It sets up Express and connects the routers.
+
+**Routers** (`routes/`) define the URL paths (like `GET /api/inventory`) and hand each request off to the right controller.
+
+**Controllers** (`controllers/`) receive the request, call the appropriate service, and send the response back to the client with the right status code (200 for success, 500 if something went wrong).
+
+**Services** (`services/`) contain the business logic. This is where rules like filtering, sorting, or validating data would live.
+
+**Models** (`models/`) are the only layer that talks to the database directly. They contain the SQL queries and return raw results up to the service.
+
+**DB** (`db/db.js`) opens and manages the SQLite database connection.
