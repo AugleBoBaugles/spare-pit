@@ -1,22 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useInventory } from './hooks/useInventory';
 
 function App() {
-  const [data, setData] = useState(null);
+  const { data, loading, error } = useInventory();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch('/api/inventory');
-        const result = await response.json();
-        console.log(result);
-        setData(result);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    };
-
-    fetchData();
-  }, []);
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error: {error.message}</p>;
 
   return (
     <>
