@@ -1,15 +1,12 @@
-import { useInventory } from './hooks/useInventory';
-
+import AddItemPage from "./components/AddItemPage";
+import InventoryPage from "./components/InventoryPage";
 function App() {
-  const { data, loading, error } = useInventory();
-
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p>Error: {error.message}</p>;
 
   return (
     <>
       <h1>Spare Pit</h1>
-      <pre>{JSON.stringify(data, null, 2)}</pre>
+      <AddItemPage />
+      <InventoryPage />
     </>
   );
 }
