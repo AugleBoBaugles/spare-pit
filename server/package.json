@@ -1,0 +1,41 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon server.js",
+    "start": "node server.js",
+    "init-db": "node scripts/initDbScript.js",
+    "seed-db": "node scripts/seedDbScript.js",
+    "reset-db": "node scripts/deleteDbScript.js && node scripts/initDbScript.js",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage"
+  },
+  "author": "",
+  "contributors": [
+    {
+      "name": "Augy Markham",
+      "url": "https://www.linkedin.com/in/augy-markham"
+    },
+    {
+      "name": "Rebecca Riffle",
+      "url": "https://www.linkedin.com/in/rebecca-riffle"
+    }
+  ],
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.2.1",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^6.0.1"
+  },
+  "devDependencies": {
+    "jest": "^30.3.0",
+    "jest-environment-node": "^30.3.0",
+    "nodemon": "^3.1.14"
+  },
+  "jest": {
+    "testEnvironment": "node"
+  }
+}

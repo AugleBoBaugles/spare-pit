@@ -1,0 +1,72 @@
+.inventory-page {
+  padding: 1rem;
+}
+
+.inventory-page h2 {
+  margin-bottom: 1rem;
+}
+
+.inventory-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.inventory-table thead tr {
+  border-bottom: 0.5px solid var(--color-border-strong);
+}
+
+.inventory-table th {
+  text-align: left;
+  padding: 8px 12px;
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.inventory-table tbody tr {
+  border-bottom: 0.5px solid var(--color-border);
+}
+
+.inventory-table tbody tr.row-shaded {
+  background: var(--color-surface);
+}
+
+.inventory-table td {
+  padding: 10px 12px;
+}
+
+.col-name {
+  font-weight: 500;
+}
+
+.col-muted {
+  color: var(--color-text-secondary);
+}
+
+.capitalize {
+  text-transform: capitalize;
+}
+
+.status-pill {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.status-available {
+  background: #EAF3DE;
+  color: #3B6D11;
+}
+
+.status-in-use {
+  background: #FAEEDA;
+  color: #854F0B;
+}
+
+.status-missing {
+  background: #FCEBEB;
+  color: #A32D2D;
+}
