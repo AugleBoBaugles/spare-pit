@@ -58,3 +58,17 @@ test('initDb is idempotent (safe to run multiple times)', async () => {
     await db.close();
 });
 
+test('inventory table has correct columns', async () => {
+  const db = await initDb(TEST_DB);
+
+  const columns = await db.all(`PRAGMA table_info(inventory)`);
+  const columnNames = columns.map(col => col.name);
+
+  expect(columnNames).toEqual(expect.arrayContaining([
+    'id', 'name', 'type', 'area', 'location',
+    'status', 'quantity', 'condition', 'itemImage',
+    'checkOutBy', 'lastUpdated', 'tags', 'notes'
+  ]));
+
+  await db.close();
+});

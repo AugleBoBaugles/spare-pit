@@ -11,8 +11,20 @@ await jest.unstable_mockModule('../services/inventoryService.js', () => ({
 const { default: app } = await import('../app.js');
 
 const mockInventory = [
-  { id: 1, name: 'Cordless Drill', type: 'tool', location: 'Tool Cabinet A', status: 'available' },
-  { id: 2, name: 'Multimeter', type: 'tool', location: 'Electronics Bench', status: 'in-use' },
+  { 
+    id: 1, name: 'Cordless Drill', type: 'tool', area: 'Machine Shop',
+    location: 'Tool Cabinet A', status: 'available', quantity: 2,
+    condition: 'good', itemImage: 'images/cordless-drill.jpg',
+    checkOutBy: null, lastUpdated: '2025-04-01 10:00:00',
+    tags: 'power,drilling', notes: 'Includes 2 battery packs'
+  },
+  { 
+    id: 2, name: 'Multimeter', type: 'tool', area: 'Electronics Lab',
+    location: 'Electronics Bench 2', status: 'checked-out', quantity: 2,
+    condition: 'fair', itemImage: 'images/multimeter.jpg',
+    checkOutBy: 'Jamie R.', lastUpdated: '2025-04-10 14:30:00',
+    tags: 'electronics,testing', notes: 'One unit has a cracked screen but works fine'
+  },
 ];
 
 describe('GET /api/inventory', () => {
@@ -36,6 +48,25 @@ test('GET / returns welcome message', async () => {
 
     expect(res.status).toBe(200);
     expect(res.body).toEqual(mockInventory);
+  });
+
+  test('200: returns items with all expected fields', async () => {
+    mockGetAllInventoryService.mockResolvedValue(mockInventory);
+
+    const { default: request } = await import('supertest');
+    const res = await request(app).get('/api/inventory');
+
+    expect(res.status).toBe(200);
+    
+    const item = res.body[0];
+    expect(item).toHaveProperty('area');
+    expect(item).toHaveProperty('quantity');
+    expect(item).toHaveProperty('condition');
+    expect(item).toHaveProperty('itemImage');
+    expect(item).toHaveProperty('checkOutBy');
+    expect(item).toHaveProperty('lastUpdated');
+    expect(item).toHaveProperty('tags');
+    expect(item).toHaveProperty('notes');
   });
 
   test('200: returns empty array when inventory is empty', async () => {
