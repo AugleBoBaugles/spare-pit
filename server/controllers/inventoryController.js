@@ -55,7 +55,7 @@ export const postTool = async (req, res) => {
     }
 
     try {
-        const result = await postToolService({ ...item, name: item.name.trim() });
+        const result = await postInventoryService(item);
         res.status(201).json(result);
     } catch (err) {
         console.error('Error posting tool:', err);
