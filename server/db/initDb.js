@@ -26,7 +26,7 @@ export async function initDb(dbPath = 'db/frc-inventory.db') {
       status TEXT,
       quantity INTEGER,
       condition TEXT,
-      itemImage BLOB,
+      itemImage TEXT,
       checkOutBy TEXT,
       lastUpdated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       tags TEXT,
