@@ -21,8 +21,16 @@ export async function initDb(dbPath = 'db/frc-inventory.db') {
       id INTEGER PRIMARY KEY,
       name TEXT NOT NULL,
       type TEXT,
+      area TEXT,
       location TEXT,
-      status TEXT
+      status TEXT,
+      quantity INTEGER,
+      condition TEXT,
+      itemImage BLOB,
+      checkOutBy TEXT,
+      lastUpdated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      tags TEXT,
+      notes TEXT
     )
   `);
 
