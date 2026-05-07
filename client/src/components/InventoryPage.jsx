@@ -4,6 +4,13 @@ import { useInventory } from '../utils/useInventory';
 import SearchBar from './SearchBar';
 import '../styles/InventoryPage.css';
 
+
+function getStatusClass(status) {
+  if (status === 'available') return 'status-available';
+  if (status === 'missing') return 'status-missing';
+  return 'status-in-use'; // checked-out, maintenance, and anything new
+}
+
 function InventoryPage() {
   const { data, loading, error } = useInventory();
   const [searchQuery, setSearchQuery] = useState('');
@@ -36,9 +43,7 @@ function InventoryPage() {
                 <td className="col-muted capitalize">{item.type}</td>
                 <td className="col-muted">{item.location}</td>
                 <td>
-                  <span className={`status-pill status-${item.status}`}>
-                    {item.status}
-                  </span>
+                  <span className={`status-pill ${getStatusClass(item.status)}`}>{item.status}</span>
                 </td>
               </tr>
             ))}
