@@ -8,7 +8,7 @@ import '../styles/InventoryPage.css';
 function getStatusClass(status) {
   if (status === 'available') return 'status-available';
   if (status === 'missing') return 'status-missing';
-  return 'status-in-use'; // checked-out, maintenance, and anything new
+  return 'status-in-use';
 }
 
 function InventoryPage() {
@@ -25,7 +25,9 @@ function InventoryPage() {
       <h2>Inventory</h2>
       <SearchBar value={searchQuery} onChange={setSearchQuery} />
 
-      {searchQuery && filteredData.length === 0 ? (
+      {data.length === 0 ? (
+        <p className="empty-state">The inventory database is empty.</p>
+      ) : searchQuery && filteredData.length === 0 ? (
         <p className="empty-state">No items found for "{searchQuery}"</p>
       ) : (
         <table className="inventory-table">
