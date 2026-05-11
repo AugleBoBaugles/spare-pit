@@ -16,7 +16,7 @@ export async function getAllInventory() {
  */
 export async function findInventoryByName(name) {
     const db = await getDb();
-    return db.get('SELECT * FROM inventory WHERE name = ?', name);
+    return db.get('SELECT * FROM inventory WHERE LOWER(name) = LOWER(?)', name);
 }
 
 /*
