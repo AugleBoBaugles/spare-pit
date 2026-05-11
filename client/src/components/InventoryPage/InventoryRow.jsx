@@ -1,0 +1,1 @@
+// A single inventory table row. Renders a summary row and, when open, the ExpandedPanel beneath it.

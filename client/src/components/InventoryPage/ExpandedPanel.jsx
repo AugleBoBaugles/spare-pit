@@ -1,0 +1,1 @@
+// Renders the expanded detail panel for an inventory item.

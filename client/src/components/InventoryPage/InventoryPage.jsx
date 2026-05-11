@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { filterInventory } from '../utils/filterInventory';
-import { useInventory } from '../utils/useInventory';
-import SearchBar from './SearchBar';
-import '../styles/InventoryPage.css';
+import { filterInventory } from '../../utils/filterInventory';
+import { useInventory } from '../../utils/useInventory';
+import SearchBar from '../SearchBar';
+import '../../styles/InventoryPage.css';
 
 
 function getStatusClass(status) {
