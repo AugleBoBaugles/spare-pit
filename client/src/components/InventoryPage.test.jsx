@@ -7,8 +7,8 @@ vi.mock('../utils/useInventory')
 import { useInventory } from '../utils/useInventory'
 
 const MOCK_TOOLS = [
-  { id: 1, name: 'Torque Wrench', type: 'hand', location: 'Bay 1', status: 'in' },
-  { id: 2, name: 'Impact Driver', type: 'power', location: 'Bay 2', status: 'out' },
+  { id: 1, name: 'Torque Wrench', type: 'hand', location: 'Bay 1', status: 'available' },
+  { id: 2, name: 'Impact Driver', type: 'power', location: 'Bay 2', status: 'missing' },
 ]
 
 describe('InventoryPage', () => {
@@ -45,10 +45,10 @@ describe('InventoryPage', () => {
     useInventory.mockReturnValue({ data: MOCK_TOOLS, loading: false, error: null })
     render(<InventoryPage />)
 
-    const inPill = screen.getByText('in')
-    const outPill = screen.getByText('out')
-    expect(inPill).toHaveClass('status-in')
-    expect(outPill).toHaveClass('status-out')
+    const availablePill = screen.getByText('available')
+    const missingPill = screen.getByText('missing')
+    expect(availablePill).toHaveClass('status-available')
+    expect(missingPill).toHaveClass('status-missing')
   })
 
   it('renders column headers', () => {
@@ -60,11 +60,11 @@ describe('InventoryPage', () => {
     }
   })
 
-  it('shows empty table body when data is empty', () => {
+  it('shows an empty database message when data is empty', () => {
     useInventory.mockReturnValue({ data: [], loading: false, error: null })
     render(<InventoryPage />)
-    // Table should render but tbody has no rows
-    expect(screen.getByRole('table')).toBeInTheDocument()
-    expect(screen.queryAllByRole('row').length).toBe(1) // only the header row
+
+    expect(screen.getByText('The inventory database is empty.')).toBeInTheDocument()
+    expect(screen.queryByRole('table')).not.toBeInTheDocument()
   })
 })
