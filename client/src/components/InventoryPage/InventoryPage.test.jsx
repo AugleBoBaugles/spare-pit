@@ -1,9 +1,9 @@
 import { render, screen } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import InventoryPage from '../components/InventoryPage'
+import InventoryPage from './InventoryPage'
 
 // Mock the hook so tests never hit a real server
-vi.mock('../utils/useInventory')
+vi.mock('../../utils/useInventory')
 import { useInventory } from '../../utils/useInventory'
 
 const MOCK_TOOLS = [

@@ -6,7 +6,7 @@ const ITEM_FIELDS = [
   { key: 'checkOutBy', label: 'Checked out by' },
   { key: 'tags',       label: 'Tags' },
   { key: 'notes',      label: 'Notes' },
-  { key: 'itemImage',  label: 'Image path' },
+  { key: 'itemImage',  label: 'Image' },
 ];
 
 const FALLBACK = 'Not specified';
