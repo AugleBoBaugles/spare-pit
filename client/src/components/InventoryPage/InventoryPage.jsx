@@ -2,23 +2,22 @@ import { useState } from 'react';
 import { filterInventory } from '../../utils/filterInventory';
 import { useInventory } from '../../utils/useInventory';
 import SearchBar from '../SearchBar';
+import InventoryRow from './InventoryRow';
 import '../../styles/InventoryPage.css';
-
-
-function getStatusClass(status) {
-  if (status === 'available') return 'status-available';
-  if (status === 'missing') return 'status-missing';
-  return 'status-in-use';
-}
 
 function InventoryPage() {
   const { data, loading, error } = useInventory();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery]   = useState('');
+  const [expandedId, setExpandedId]     = useState(null);
 
   if (loading) return <p>Loading...</p>;
-  if (error) return <p>Error: {error.message}</p>;
+  if (error)   return <p>Error: {error.message}</p>;
 
   const filteredData = filterInventory(data, searchQuery);
+
+  function handleToggle(id) {
+    setExpandedId((prev) => (prev === id ? null : id));
+  }
 
   return (
     <div className="inventory-page">
@@ -33,21 +32,20 @@ function InventoryPage() {
         <table className="inventory-table">
           <thead>
             <tr>
-              {['Name', 'Type', 'Location', 'Status'].map(col => (
+              {['Name', 'Type', 'Location', 'Status'].map((col) => (
                 <th key={col}>{col}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {filteredData.map((item, i) => (
-              <tr key={item.id} className={i % 2 === 0 ? '' : 'row-shaded'}>
-                <td className="col-name">{item.name}</td>
-                <td className="col-muted capitalize">{item.type}</td>
-                <td className="col-muted">{item.location}</td>
-                <td>
-                  <span className={`status-pill ${getStatusClass(item.status)}`}>{item.status}</span>
-                </td>
-              </tr>
+              <InventoryRow
+                key={item.id}
+                item={item}
+                isOpen={expandedId === item.id}
+                onToggle={() => handleToggle(item.id)}
+                className={i % 2 === 0 ? '' : 'row-shaded'}
+              />
             ))}
           </tbody>
         </table>
