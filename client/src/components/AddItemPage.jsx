@@ -88,11 +88,6 @@ function AddItemPage({ onNavigate }) {
         Fields marked <span className="req">*</span> are required.
       </p>
 
-      {duplicate && (
-        <div role="alert" className="banner banner--warn">
-          An item with this name already exists. It's been added — just a heads up. Redirecting…
-        </div>
-      )}
       {errors.submit && (
         <div role="alert" className="banner banner--error">
           {errors.submit}
@@ -250,6 +245,12 @@ function AddItemPage({ onNavigate }) {
             </div>
           )}
         </div>
+
+        {duplicate && (
+          <div role="alert" className="banner banner--warn">
+            An item with this name already exists. It's been added — just a heads up. Redirecting…
+          </div>
+        )}
 
         <div className="btn-row">
           <button type="submit" disabled={submitting}>

@@ -2,6 +2,7 @@
 
 .add-item-page {
   max-width: 560px;
+  padding: 1rem;
 }
 
 .add-item-page .page-sub {
@@ -95,6 +96,9 @@
   background: #fefce8;
   color: #854d0e;
   border-color: #fde047;
+  border-left: 3px solid #eab308;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
 }
 
 .add-item-page .banner--error {
