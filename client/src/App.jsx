@@ -1,7 +1,7 @@
 import { useState } from "react";
 import './styles/global.css'
 import AddItemPage from "./components/AddItemPage";
-import InventoryPage from "./components/InventoryPage";
+import InventoryPage from "./components/InventoryPage/InventoryPage";
 import HomePage from "./components/HomePage";
 
 const NAV_ITEMS = [

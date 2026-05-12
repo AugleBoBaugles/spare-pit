@@ -1,3 +1,5 @@
+/* InventoryPage — main layout and table base styles */
+
 .inventory-page {
   padding: 1rem;
 }
@@ -36,6 +38,24 @@
   padding: 10px 12px;
 }
 
+/* InventoryRow — interactive row styles */
+
+.inventory-row {
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.inventory-row:hover {
+  background: rgba(17, 17, 16, 0.04);
+}
+
+.inventory-row--expanded {
+  background: var(--color-surface);
+  border-bottom: none;
+}
+
+/* Col helpers */
+
 .col-name {
   font-weight: 500;
 }
@@ -47,6 +67,8 @@
 .capitalize {
   text-transform: capitalize;
 }
+
+/* Status pills */
 
 .status-pill {
   padding: 3px 10px;
@@ -69,4 +91,51 @@
 .status-missing {
   background: #FCEBEB;
   color: #A32D2D;
+}
+
+/* ExpandedPanel — detail view below an expanded row */
+
+.expanded-panel-row {
+  background: var(--color-surface);
+}
+
+.expanded-panel-cell {
+  padding: 0 !important;
+  border-bottom: 2px solid var(--color-border-strong);
+}
+
+.expanded-panel {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1px;
+  padding: 16px 12px;
+  background: var(--color-surface);
+  border-top: 0.5px solid var(--color-border);
+}
+
+.expanded-panel__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  background: var(--color-surface);
+}
+
+.expanded-panel__label {
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary);
+}
+
+.expanded-panel__value {
+  font-size: 13px;
+  color: var(--color-text-primary);
+  word-break: break-word;
+}
+
+.expanded-panel__value--empty {
+  color: var(--color-text-tertiary);
+  font-style: italic;
 }
