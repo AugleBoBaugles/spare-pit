@@ -1,0 +1,109 @@
+.home-page {
+  padding: 1rem;
+  max-width: 560px;
+}
+
+.home-sub {
+  font-size: 13px;
+  color: var(--color-text-tertiary);
+  margin-bottom: 2rem;
+}
+
+/* ── Stats strip ── */
+
+.home-stats {
+  display: flex;
+  border: 0.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  margin-bottom: 2.5rem;
+  margin-top: 1rem;
+}
+
+.stat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 1.25rem 1.5rem;
+  border-right: 0.5px solid var(--color-border);
+}
+
+.stat:last-child {
+  border-right: none;
+}
+
+.stat__value {
+  font-size: 1.75rem;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  color: var(--color-text-primary);
+  line-height: 1;
+}
+
+.stat__label {
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+}
+
+/* ── Attention section ── */
+
+.home-section-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+  margin-bottom: 0.75rem;
+}
+
+.home-empty {
+  font-size: 13px;
+  color: var(--color-text-tertiary);
+  font-style: italic;
+}
+
+.attention-list {
+  list-style: none;
+}
+
+.attention-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 0.5px solid var(--color-border);
+  font-size: 14px;
+}
+
+.attention-item:last-child {
+  border-bottom: none;
+}
+
+.attention-item__name {
+  font-weight: 500;
+  flex: 1;
+}
+
+.attention-item__loc {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.attention-item__badge {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 999px;
+  text-transform: capitalize;
+}
+
+.attention-item__badge--maintenance {
+  background: #fefce8;
+  color: #854d0e;
+}
+
+.attention-item__badge--missing {
+  background: #fff1f0;
+  color: #c0392b;
+}
