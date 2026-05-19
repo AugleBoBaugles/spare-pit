@@ -3,10 +3,12 @@ import { jest } from '@jest/globals';
 
 const mockGetAllInventoryService = jest.fn();
 const mockPostInventoryService = jest.fn();
+const mockDeleteInventoryService = jest.fn();
 
 await jest.unstable_mockModule('../services/inventoryService.js', () => ({
   getAllInventoryService: mockGetAllInventoryService,
-  postInventoryService: mockPostInventoryService
+  postInventoryService: mockPostInventoryService,
+  deleteInventoryService: mockDeleteInventoryService,
 }));
 
 // Dynamic imports MUST come after unstable_mockModule
@@ -210,5 +212,71 @@ describe('POST /api/inventory', () => {
         expect(consoleSpy).toHaveBeenCalledWith('Error posting tool:', expect.any(Error));
 
         consoleSpy.mockRestore();
+    });
+});
+
+// ─── DELETE /api/inventory/:id ────────────────────────────────────────────────
+describe('DELETE /api/inventory/:id', () => {
+    afterEach(() => jest.resetAllMocks());
+
+    test('200: returns confirmation message and deleted item on success', async () => {
+        mockDeleteInventoryService.mockResolvedValue(mockInventory[0]);
+
+        const { default: request } = await import('supertest');
+        const res = await request(app).delete('/api/inventory/1');
+
+        expect(res.status).toBe(200);
+        expect(res.body.message).toMatch(/Cordless Drill/i);
+        expect(res.body.deleted).toMatchObject({ id: 1, name: 'Cordless Drill' });
+    });
+
+    test('200: deleted field contains all expected inventory fields', async () => {
+        mockDeleteInventoryService.mockResolvedValue(mockInventory[0]);
+
+        const { default: request } = await import('supertest');
+        const res = await request(app).delete('/api/inventory/1');
+
+        expect(res.status).toBe(200);
+        expect(res.body.deleted).toHaveProperty('id');
+        expect(res.body.deleted).toHaveProperty('name');
+        expect(res.body.deleted).toHaveProperty('type');
+        expect(res.body.deleted).toHaveProperty('status');
+        expect(res.body.deleted).toHaveProperty('quantity');
+    });
+
+    test('404: returns descriptive error when id does not exist in db', async () => {
+        mockDeleteInventoryService.mockRejectedValue(
+            Object.assign(new Error('Inventory item not found'), { statusCode: 404 })
+        );
+
+        const { default: request } = await import('supertest');
+        const res = await request(app).delete('/api/inventory/9999');
+
+        expect(res.status).toBe(404);
+        expect(res.body.error).toMatch(/inventory item not found/i);
+    });
+
+    test('500: returns error json when service throws unexpectedly', async () => {
+        const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+        mockDeleteInventoryService.mockRejectedValue(new Error('DB connection failed'));
+
+        const { default: request } = await import('supertest');
+        const res = await request(app).delete('/api/inventory/1');
+
+        expect(res.status).toBe(500);
+        expect(res.body).toEqual({ error: 'Failed to delete inventory item' });
+        expect(consoleSpy).toHaveBeenCalledWith('Error deleting inventory item:', expect.any(Error));
+
+        consoleSpy.mockRestore();
+    });
+
+    test('500: service is called with the correct id from route params', async () => {
+        mockDeleteInventoryService.mockResolvedValue(mockInventory[1]);
+
+        const { default: request } = await import('supertest');
+        await request(app).delete('/api/inventory/2');
+
+        expect(mockDeleteInventoryService).toHaveBeenCalledWith('2');
+        expect(mockDeleteInventoryService).toHaveBeenCalledTimes(1);
     });
 });
