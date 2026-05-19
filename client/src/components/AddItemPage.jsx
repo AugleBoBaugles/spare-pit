@@ -144,11 +144,16 @@ function AddItemPage({ onNavigate }) {
         {form.status === "checked-out" && (
           <div className="field">
             <label htmlFor="checkOutBy">Checked out by</label>
-            <input
-              id="checkOutBy" name="checkOutBy" type="text"
+            <select
+              id="checkOutBy" name="checkOutBy"
               value={form.checkOutBy} onChange={handleChange}
-              placeholder="e.g. Alex T."
-            />
+            >
+              <option value="">Select subteam…</option>
+              <option value="electrical">Electrical</option>
+              <option value="mechanical">Mechanical</option>
+              <option value="programming">Programming</option>
+              <option value="pr">PR</option>
+            </select>
           </div>
         )}
 
