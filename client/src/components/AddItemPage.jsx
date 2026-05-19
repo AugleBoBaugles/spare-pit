@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import '../styles/AddItemPage.css';
 
 const INITIAL_FORM = {
@@ -13,6 +13,14 @@ function AddItemPage({ onNavigate }) {
   const [duplicate, setDuplicate] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
+  const [subteams, setSubteams] = useState([]);
+
+  useEffect(() => {
+    fetch("/api/inventory/subteams")
+      .then(r => r.json())
+      .then(setSubteams)
+      .catch(() => {});
+  }, []);
 
   function validate() {
     const next = {};
@@ -144,16 +152,15 @@ function AddItemPage({ onNavigate }) {
         {form.status === "checked-out" && (
           <div className="field">
             <label htmlFor="checkOutBy">Checked out by</label>
-            <select
-              id="checkOutBy" name="checkOutBy"
+            <input
+              id="checkOutBy" name="checkOutBy" type="text"
+              list="subteam-options"
               value={form.checkOutBy} onChange={handleChange}
-            >
-              <option value="">Select subteam…</option>
-              <option value="electrical">Electrical</option>
-              <option value="mechanical">Mechanical</option>
-              <option value="programming">Programming</option>
-              <option value="pr">PR</option>
-            </select>
+              placeholder="e.g. electrical"
+            />
+            <datalist id="subteam-options">
+              {subteams.map(s => <option key={s} value={s} />)}
+            </datalist>
           </div>
         )}
 
