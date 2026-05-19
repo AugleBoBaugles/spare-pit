@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\rebec\\\\Desktop\\\\FRC\\\\frc-inventory-app\" -Force)",
+      "Bash(Select-Object Name, Mode)"
+    ]
+  }
+}
