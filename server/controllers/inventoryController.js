@@ -1,4 +1,4 @@
-import { getAllInventoryService, postInventoryService } from "../services/inventoryService.js";
+import { getAllInventoryService, postInventoryService, deleteInventoryService } from "../services/inventoryService.js";
 
 /*
  * GET /inventory - Retrieve all inventory items
@@ -61,4 +61,29 @@ export const postTool = async (req, res) => {
         console.error('Error posting tool:', err);
         res.status(500).json({ error: 'Failed to add inventory item' });
     }
-}
+};
+
+/*
+ * DELETE /inventory/:id - Delete an inventory item
+ */
+export const deleteTool = async (req, res) => {
+    const id = req.params.id;
+
+    if (!id) {
+        return res.status(404).json({ error: 'ID parameter is required' });
+    }
+
+    try {
+        const deletedItem = await deleteInventoryService(id);
+        return res.status(200).json({
+            message: `${deletedItem.name} has been deleted from the inventory`,
+            deleted: deletedItem,
+        });
+    } catch (err) {
+        console.error('Error deleting inventory item:', err);
+        if (err.message === 'Inventory item not found') {
+            return res.status(404).json({ error: 'Inventory item not found' });
+        }
+        return res.status(500).json({ error: 'Failed to delete inventory item' });
+    }
+};
