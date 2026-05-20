@@ -40,7 +40,22 @@ start.bat
 ## User Guide
 **Contents**
 
-1.[Troubleshooting](#troubleshooting)
+1. [Dark Mode](#dark-mode)
+1. [Troubleshooting](#troubleshooting)
+
+### Dark Mode
+
+Spare Pit supports light and dark mode so you can view the inventory comfortably in any environment.
+
+A flashlight icon sits in the **upper-right corner** of every page.
+
+| Icon | Current mode | Click to… |
+|------|-------------|-----------|
+| Flashlight off (dim) | Light mode | Switch to dark mode |
+| Flashlight on (lit) | Dark mode | Switch to light mode |
+
+Click the icon once to switch modes. The preference is active for the current session.
+
 ### Troubleshooting
 #### Reset Database
 *Warning: This will delete ALL the contents of your database. Proceed with caution!*
