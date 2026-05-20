@@ -103,13 +103,13 @@
 }
 
 [data-theme="dark"] .status-in-use {
-  background: #2e1f0a;
-  color: #d4890a;
+  background: var(--color-warn-bg);
+  color: var(--color-warn-fg);
 }
 
 [data-theme="dark"] .status-missing {
-  background: #2e0f0f;
-  color: #d46060;
+  background: var(--color-error-bg);
+  color: var(--color-error-fg);
 }
 
 /* ExpandedPanel — detail view below an expanded row */

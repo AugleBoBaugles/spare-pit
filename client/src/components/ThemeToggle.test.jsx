@@ -1,8 +1,28 @@
 import { render, screen, fireEvent } from '@testing-library/react'
-import { describe, it, expect, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import ThemeToggle from './ThemeToggle'
 
+function mockMatchMedia(prefersDark) {
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: vi.fn().mockImplementation(query => ({
+      matches: prefersDark && query === '(prefers-color-scheme: dark)',
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  })
+}
+
 describe('ThemeToggle', () => {
+  beforeEach(() => {
+    mockMatchMedia(false)
+  })
+
   afterEach(() => {
     document.documentElement.removeAttribute('data-theme')
   })
@@ -19,12 +39,12 @@ describe('ThemeToggle', () => {
     expect(document.documentElement).toHaveAttribute('data-theme', 'dark')
   })
 
-  it('removes dark theme on second click', () => {
+  it('switches back to light mode on second click', () => {
     render(<ThemeToggle />)
     const button = screen.getByRole('button')
     fireEvent.click(button)
     fireEvent.click(button)
-    expect(document.documentElement).not.toHaveAttribute('data-theme')
+    expect(document.documentElement).toHaveAttribute('data-theme', 'light')
   })
 
   it('shows flashlight-off in light mode and flashlight-on in dark mode', () => {
@@ -35,5 +55,12 @@ describe('ThemeToggle', () => {
     fireEvent.click(screen.getByRole('button'))
     expect(screen.getByTestId('flashlight-on')).toBeInTheDocument()
     expect(screen.queryByTestId('flashlight-off')).not.toBeInTheDocument()
+  })
+
+  it('initializes to dark mode when prefers-color-scheme is dark', () => {
+    mockMatchMedia(true)
+    render(<ThemeToggle />)
+    expect(screen.getByTestId('flashlight-on')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /switch to light mode/i })).toBeInTheDocument()
   })
 })

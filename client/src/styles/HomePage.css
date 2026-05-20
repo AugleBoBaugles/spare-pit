@@ -99,21 +99,11 @@
 }
 
 .attention-item__badge--maintenance {
-  background: #fefce8;
-  color: #854d0e;
+  background: var(--color-warn-bg);
+  color: var(--color-warn-fg);
 }
 
 .attention-item__badge--missing {
-  background: #fff1f0;
-  color: #c0392b;
-}
-
-[data-theme="dark"] .attention-item__badge--maintenance {
-  background: #2e1f0a;
-  color: #d4890a;
-}
-
-[data-theme="dark"] .attention-item__badge--missing {
-  background: #2e0f0f;
-  color: #d46060;
+  background: var(--color-error-bg);
+  color: var(--color-error-fg);
 }

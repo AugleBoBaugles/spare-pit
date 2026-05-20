@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import '../styles/ThemeToggle.css'
 
 function FlashlightOff() {
@@ -48,16 +48,18 @@ function FlashlightOn() {
 }
 
 export default function ThemeToggle() {
-  const [isDark, setIsDark] = useState(false)
+  const [isDark, setIsDark] = useState(
+    () => window.matchMedia('(prefers-color-scheme: dark)').matches
+  )
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light')
+  }, [])
 
   function handleToggle() {
     const next = !isDark
     setIsDark(next)
-    if (next) {
-      document.documentElement.setAttribute('data-theme', 'dark')
-    } else {
-      document.documentElement.removeAttribute('data-theme')
-    }
+    document.documentElement.setAttribute('data-theme', next ? 'dark' : 'light')
   }
 
   return (
