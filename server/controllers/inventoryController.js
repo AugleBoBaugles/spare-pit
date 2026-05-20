@@ -62,3 +62,8 @@ export const postTool = async (req, res) => {
         res.status(500).json({ error: 'Failed to add inventory item' });
     }
 }
+
+export const patchInventory = async (req, res) => {
+    const id = req.params.id;
+    res.status(200).send(`Update inventory item with ID: ${id}`);
+}   
