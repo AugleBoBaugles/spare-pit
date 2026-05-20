@@ -65,10 +65,12 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={handleToggle}
-      className="theme-toggle"
+      className={`theme-toggle${isDark ? ' theme-toggle--dark' : ''}`}
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
     >
-      {isDark ? <FlashlightOn /> : <FlashlightOff />}
+      <span className="theme-toggle-thumb" aria-hidden="true" />
+      <span className="theme-toggle-icon"><FlashlightOn /></span>
+      <span className="theme-toggle-icon"><FlashlightOff /></span>
     </button>
   )
 }

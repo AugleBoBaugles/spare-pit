@@ -47,20 +47,20 @@ describe('ThemeToggle', () => {
     expect(document.documentElement).toHaveAttribute('data-theme', 'light')
   })
 
-  it('shows flashlight-off in light mode and flashlight-on in dark mode', () => {
+  it('shows both icons always and reflects mode via button class', () => {
     render(<ThemeToggle />)
     expect(screen.getByTestId('flashlight-off')).toBeInTheDocument()
-    expect(screen.queryByTestId('flashlight-on')).not.toBeInTheDocument()
+    expect(screen.getByTestId('flashlight-on')).toBeInTheDocument()
+    expect(screen.getByRole('button')).not.toHaveClass('theme-toggle--dark')
 
     fireEvent.click(screen.getByRole('button'))
-    expect(screen.getByTestId('flashlight-on')).toBeInTheDocument()
-    expect(screen.queryByTestId('flashlight-off')).not.toBeInTheDocument()
+    expect(screen.getByRole('button')).toHaveClass('theme-toggle--dark')
   })
 
   it('initializes to dark mode when prefers-color-scheme is dark', () => {
     mockMatchMedia(true)
     render(<ThemeToggle />)
-    expect(screen.getByTestId('flashlight-on')).toBeInTheDocument()
+    expect(screen.getByRole('button')).toHaveClass('theme-toggle--dark')
     expect(screen.getByRole('button', { name: /switch to light mode/i })).toBeInTheDocument()
   })
 })
