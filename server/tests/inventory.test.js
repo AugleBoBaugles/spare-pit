@@ -3,10 +3,12 @@ import { jest } from '@jest/globals';
 
 const mockGetAllInventoryService = jest.fn();
 const mockPostInventoryService = jest.fn();
+const mockGetSubteamsService = jest.fn();
 
 await jest.unstable_mockModule('../services/inventoryService.js', () => ({
   getAllInventoryService: mockGetAllInventoryService,
-  postInventoryService: mockPostInventoryService
+  postInventoryService: mockPostInventoryService,
+  getSubteamsService: mockGetSubteamsService,
 }));
 
 // Dynamic imports MUST come after unstable_mockModule
@@ -44,6 +46,46 @@ const validPostBody = {
 };
 
 const mockNewItem = { id: 3, ...validPostBody, lastUpdated: 1714500000000 };
+
+// ─── GET /api/inventory/subteams ─────────────────────────────────────────────
+
+describe('GET /api/inventory/subteams', () => {
+  afterEach(() => jest.resetAllMocks());
+
+  test('200: returns array of subteam strings', async () => {
+    mockGetSubteamsService.mockResolvedValue(['electrical', 'mechanical', 'programming']);
+
+    const { default: request } = await import('supertest');
+    const res = await request(app).get('/api/inventory/subteams');
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual(['electrical', 'mechanical', 'programming']);
+  });
+
+  test('200: returns empty array when no items have a checkOutBy value', async () => {
+    mockGetSubteamsService.mockResolvedValue([]);
+
+    const { default: request } = await import('supertest');
+    const res = await request(app).get('/api/inventory/subteams');
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual([]);
+  });
+
+  test('500: returns error json when service throws', async () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    mockGetSubteamsService.mockRejectedValue(new Error('DB connection failed'));
+
+    const { default: request } = await import('supertest');
+    const res = await request(app).get('/api/inventory/subteams');
+
+    expect(res.status).toBe(500);
+    expect(res.body).toEqual({ error: 'Failed to retrieve subteams' });
+    expect(consoleSpy).toHaveBeenCalledWith('Error fetching subteams:', expect.any(Error));
+
+    consoleSpy.mockRestore();
+  });
+});
 
 // ─── GET /api/inventory ───────────────────────────────────────────────────────
 

@@ -1,4 +1,4 @@
-import { getAllInventory, findInventoryByName, insertInventoryItem } from '../models/inventoryModel.js';
+import { getAllInventory, findInventoryByName, insertInventoryItem, getDistinctSubteams } from '../models/inventoryModel.js';
 
 /*
 Returns an array of all inventory items in the database. Each item includes all fields defined in the inventory schema.
@@ -6,6 +6,10 @@ Returns an array of all inventory items in the database. Each item includes all 
 export async function getAllInventoryService() {
     const inventory = await getAllInventory();
     return inventory;
+}
+
+export async function getSubteamsService() {
+    return getDistinctSubteams();
 }
 
 /*
