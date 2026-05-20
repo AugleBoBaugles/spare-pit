@@ -3,6 +3,7 @@ import './styles/global.css'
 import AddItemPage from "./components/AddItemPage";
 import InventoryPage from "./components/InventoryPage/InventoryPage";
 import HomePage from "./components/HomePage";
+import ThemeToggle from "./components/ThemeToggle";
 
 const NAV_ITEMS = [
   { id: "home", label: "Home" },
@@ -15,6 +16,7 @@ function App() {
 
   return (
     <>
+      <ThemeToggle />
       <h1>Spare Pit</h1>
 
       <nav>
