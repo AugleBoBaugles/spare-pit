@@ -107,6 +107,29 @@
   border-color: #fca5a5;
 }
 
+[data-theme="dark"] .add-item-page .banner--warn {
+  background: #2e1f0a;
+  color: #d4890a;
+  border-color: #6b4000;
+  border-left-color: #d4890a;
+}
+
+[data-theme="dark"] .add-item-page .banner--error {
+  background: #2e0f0f;
+  color: #d46060;
+  border-color: #6b2020;
+}
+
+[data-theme="dark"] .add-item-page .req,
+[data-theme="dark"] .add-item-page .field-error {
+  color: #d46060;
+}
+
+[data-theme="dark"] .add-item-page input[aria-invalid="true"],
+[data-theme="dark"] .add-item-page select[aria-invalid="true"] {
+  border-color: #d46060;
+}
+
 /* ── Submit row ── */
 
 .add-item-page .btn-row {

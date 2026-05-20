@@ -107,3 +107,13 @@
   background: #fff1f0;
   color: #c0392b;
 }
+
+[data-theme="dark"] .attention-item__badge--maintenance {
+  background: #2e1f0a;
+  color: #d4890a;
+}
+
+[data-theme="dark"] .attention-item__badge--missing {
+  background: #2e0f0f;
+  color: #d46060;
+}
