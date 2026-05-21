@@ -30,7 +30,7 @@ describe('ThemeToggle', () => {
   it('renders the flashlight icon', () => {
     render(<ThemeToggle />)
     expect(screen.getByRole('button', { name: /switch to dark mode/i })).toBeInTheDocument()
-    expect(screen.getByTestId('flashlight-off')).toBeInTheDocument()
+    expect(screen.getByTestId('dark-mode-icon')).toBeInTheDocument()
   })
 
   it('applies data-theme="dark" when clicked from light mode', () => {
@@ -49,8 +49,8 @@ describe('ThemeToggle', () => {
 
   it('shows both icons always and reflects mode via button class', () => {
     render(<ThemeToggle />)
-    expect(screen.getByTestId('flashlight-off')).toBeInTheDocument()
-    expect(screen.getByTestId('flashlight-on')).toBeInTheDocument()
+    expect(screen.getByTestId('dark-mode-icon')).toBeInTheDocument()
+    expect(screen.getByTestId('light-mode-icon')).toBeInTheDocument()
     expect(screen.getByRole('button')).not.toHaveClass('theme-toggle--dark')
 
     fireEvent.click(screen.getByRole('button'))
