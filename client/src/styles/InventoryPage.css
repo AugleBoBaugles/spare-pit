@@ -49,6 +49,10 @@
   background: rgba(17, 17, 16, 0.04);
 }
 
+[data-theme="dark"] .inventory-row:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
 .inventory-row--expanded {
   background: var(--color-surface);
   border-bottom: none;
@@ -91,6 +95,21 @@
 .status-missing {
   background: #FCEBEB;
   color: #A32D2D;
+}
+
+[data-theme="dark"] .status-available {
+  background: #1a2e0f;
+  color: #7ec850;
+}
+
+[data-theme="dark"] .status-in-use {
+  background: var(--color-warn-bg);
+  color: var(--color-warn-fg);
+}
+
+[data-theme="dark"] .status-missing {
+  background: var(--color-error-bg);
+  color: var(--color-error-fg);
 }
 
 /* ExpandedPanel — detail view below an expanded row */
