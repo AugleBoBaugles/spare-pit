@@ -4,7 +4,7 @@
   right: 1rem;
   display: flex;
   align-items: center;
-  padding: 3px;
+  padding: 2px;
   border-radius: 999px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -19,8 +19,8 @@
 
 .theme-toggle-thumb {
   position: absolute;
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   border-radius: 999px;
   background: var(--color-border);
   transition: transform 0.2s ease;
@@ -28,13 +28,13 @@
 }
 
 .theme-toggle--dark .theme-toggle-thumb {
-  transform: translateX(32px);
+  transform: translateX(24px);
 }
 
 .theme-toggle-icon {
   position: relative;
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;

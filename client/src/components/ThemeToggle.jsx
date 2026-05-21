@@ -6,8 +6,8 @@ function DarkModeIcon() {
     <svg
       data-testid="dark-mode-icon"
       xmlns="http://www.w3.org/2000/svg"
-      width="22"
-      height="22"
+      width="16"
+      height="16"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -26,8 +26,8 @@ function LightModeIcon() {
     <svg
       data-testid="light-mode-icon"
       xmlns="http://www.w3.org/2000/svg"
-      width="22"
-      height="22"
+      width="16"
+      height="16"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
