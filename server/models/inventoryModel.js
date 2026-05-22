@@ -29,6 +29,23 @@ export async function findInventoryById(id) {
 }
 
 /*
+ * Updates an inventory item by its ID with the provided fields.
+ * Returns the updated item.
+ */
+export async function updateInventoryItem(id, fields) {
+    const db = await getDb();
+    const entries = Object.entries(fields);
+    const setClauses = entries.map(([col]) => `${col} = ?`).join(', ');
+    const values = entries.map(([, val]) => val);
+    await db.run(
+        `UPDATE inventory SET ${setClauses} WHERE id = ?`,
+        ...values,
+        id
+    );
+    return db.get('SELECT * FROM inventory WHERE id = ?', id);
+}
+
+/*
  * Inserts a new inventory item into the database.
  * Returns the inserted item.
  */
