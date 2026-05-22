@@ -29,6 +29,16 @@ export async function findInventoryById(id) {
 }
 
 /*
+ * Returns the list of column names for the inventory table, derived directly from the schema.
+ * Used by the service layer to validate incoming fields against the current table structure.
+ */
+export async function getInventoryColumns() {
+    const db = await getDb();
+    const rows = await db.all('PRAGMA table_info(inventory)');
+    return rows.map(row => row.name);
+}
+
+/*
  * Updates an inventory item by its ID with the provided fields.
  * Returns the updated item.
  */
