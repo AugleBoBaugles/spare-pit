@@ -3,10 +3,17 @@ import { jest } from '@jest/globals';
 
 const mockGetAllInventoryService = jest.fn();
 const mockPostInventoryService = jest.fn();
+const mockPatchInventoryService = jest.fn();
+const mockPatchableColumns = [
+  'name', 'type', 'area', 'location', 'status',
+  'quantity', 'condition', 'itemImage', 'checkOutBy', 'tags', 'notes'
+];
 
 await jest.unstable_mockModule('../services/inventoryService.js', () => ({
   getAllInventoryService: mockGetAllInventoryService,
-  postInventoryService: mockPostInventoryService
+  postInventoryService: mockPostInventoryService,
+  patchInventoryService: mockPatchInventoryService,
+  patchableColumns: mockPatchableColumns
 }));
 
 // Dynamic imports MUST come after unstable_mockModule
@@ -208,6 +215,88 @@ describe('POST /api/inventory', () => {
         expect(res.status).toBe(500);
         expect(res.body).toEqual({ error: 'Failed to add inventory item' });
         expect(consoleSpy).toHaveBeenCalledWith('Error posting tool:', expect.any(Error));
+
+        consoleSpy.mockRestore();
+    });
+});
+
+// ─── PATCH /api/inventory/:id ─────────────────────────────────────────────────
+describe('PATCH /api/inventory/:id', () => {
+    afterEach(() => jest.resetAllMocks());
+
+    const validPatchBody = { status: 'checked-out', checkOutBy: 'Alex T.' };
+    const updatedItem = { ...mockInventory[0], status: 'checked-out', checkOutBy: 'Alex T.', lastUpdated: Date.now() };
+
+    test('200: returns updated item on success', async () => {
+        mockPatchInventoryService.mockResolvedValue(updatedItem);
+
+        const { default: request } = await import('supertest');
+        const res = await request(app).patch('/api/inventory/1').send(validPatchBody);
+
+        expect(res.status).toBe(200);
+        expect(res.body).toMatchObject({ id: 1, status: 'checked-out', checkOutBy: 'Alex T.' });
+    });
+
+    test('200: strips unknown fields and only passes patchable fields to service', async () => {
+        mockPatchInventoryService.mockResolvedValue(updatedItem);
+
+        const { default: request } = await import('supertest');
+        await request(app).patch('/api/inventory/1').send({ ...validPatchBody, injectedField: 'malicious' });
+
+        const [, updates] = mockPatchInventoryService.mock.calls[0];
+        expect(updates).not.toHaveProperty('injectedField');
+        expect(updates).not.toHaveProperty('id');
+        expect(updates).not.toHaveProperty('lastUpdated');
+    });
+
+    test('400: returns error when body contains no valid patchable fields', async () => {
+        const { default: request } = await import('supertest');
+        const res = await request(app).patch('/api/inventory/1').send({ injectedField: 'bad' });
+
+        expect(res.status).toBe(400);
+        expect(res.body.error).toMatch(/at least one valid field/i);
+    });
+
+    test('400: returns error when quantity is a non-integer', async () => {
+        const { default: request } = await import('supertest');
+        const res = await request(app).patch('/api/inventory/1').send({ quantity: 'five' });
+
+        expect(res.status).toBe(400);
+        expect(res.body.error).toMatch(/quantity must be a non-negative integer/i);
+    });
+
+    test('400: returns error when quantity is negative', async () => {
+        const { default: request } = await import('supertest');
+        const res = await request(app).patch('/api/inventory/1').send({ quantity: -1 });
+
+        expect(res.status).toBe(400);
+        expect(res.body.error).toMatch(/quantity must be a non-negative integer/i);
+    });
+
+    test('404: returns error when item does not exist', async () => {
+        const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+        const notFoundErr = Object.assign(new Error('Inventory item with ID 999 not found'), { status: 404 });
+        mockPatchInventoryService.mockRejectedValue(notFoundErr);
+
+        const { default: request } = await import('supertest');
+        const res = await request(app).patch('/api/inventory/999').send(validPatchBody);
+
+        expect(res.status).toBe(404);
+        expect(res.body.error).toMatch(/inventory item with id 999 not found/i);
+
+        consoleSpy.mockRestore();
+    });
+
+    test('500: returns error json when service throws a generic error', async () => {
+        const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+        mockPatchInventoryService.mockRejectedValue(new Error('DB update failed'));
+
+        const { default: request } = await import('supertest');
+        const res = await request(app).patch('/api/inventory/1').send(validPatchBody);
+
+        expect(res.status).toBe(500);
+        expect(res.body.error).toBe('DB update failed');
+        expect(consoleSpy).toHaveBeenCalledWith('Error patching inventory:', expect.any(Error));
 
         consoleSpy.mockRestore();
     });
