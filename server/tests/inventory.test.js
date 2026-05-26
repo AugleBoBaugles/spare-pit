@@ -264,8 +264,10 @@ describe('POST /api/inventory', () => {
 
 // ─── PATCH /api/inventory/:id ─────────────────────────────────────────────────
 describe('PATCH /api/inventory/:id', () => {
+    // Reset mocks after each test so call counts don't bleed between tests.
     afterEach(() => jest.resetAllMocks());
 
+    // A realistic patch body matching what the frontend sends after a status change.
     const validPatchBody = { status: 'checked-out', checkOutBy: 'mechanical' };
     const updatedItem = { ...mockInventory[0], status: 'checked-out', checkOutBy: 'mechanical', lastUpdated: Date.now() };
 
@@ -279,6 +281,9 @@ describe('PATCH /api/inventory/:id', () => {
         expect(res.body).toMatchObject({ id: 1, status: 'checked-out', checkOutBy: 'mechanical' });
     });
 
+    // Runs the same test once per patchable field to confirm the controller passes
+    // each one through to the service and echoes it back in the response.
+    // `%s` in the test name is replaced with the field name by Jest.
     test.each([
         ['name',       'Updated Drill'],
         ['type',       'part'],
@@ -299,12 +304,16 @@ describe('PATCH /api/inventory/:id', () => {
         const res = await request(app).patch('/api/inventory/1').send({ [field]: value });
 
         expect(res.status).toBe(200);
+        // Confirm the response body contains the new value for this field.
         expect(res.body[field]).toEqual(value);
-
+        // Confirm the controller passed the field to the service (not swallowed it).
+        // mock.calls[0] is the first call; [1] is the second argument (updates object).
         const [, updates] = mockPatchInventoryService.mock.calls[0];
         expect(updates).toHaveProperty(field, value);
     });
 
+    // The controller should strip any fields not in `patchableColumns` to prevent
+    // clients from writing arbitrary columns (e.g. `id` or `lastUpdated`).
     test('200: strips unknown fields and only passes patchable fields to service', async () => {
         mockPatchInventoryService.mockResolvedValue(updatedItem);
 
@@ -317,6 +326,7 @@ describe('PATCH /api/inventory/:id', () => {
         expect(updates).not.toHaveProperty('lastUpdated');
     });
 
+    // Sending a body with no recognised fields should be rejected, not silently ignored.
     test('400: returns error when body contains no valid patchable fields', async () => {
         const { default: request } = await import('supertest');
         const res = await request(app).patch('/api/inventory/1').send({ injectedField: 'bad' });
@@ -341,6 +351,8 @@ describe('PATCH /api/inventory/:id', () => {
         expect(res.body.error).toMatch(/quantity must be a non-negative integer/i);
     });
 
+    // The service throws a custom error with `status: 404` when the id isn't in the DB.
+    // The controller reads `err.status` to forward the right HTTP status code.
     test('404: returns error when item does not exist', async () => {
         const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
         const notFoundErr = Object.assign(new Error('Inventory item with ID 999 not found'), { status: 404 });

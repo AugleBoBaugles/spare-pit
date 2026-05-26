@@ -6,6 +6,8 @@ import InventoryRow from './InventoryRow';
 import '../../styles/InventoryPage.css';
 
 function InventoryPage() {
+  // `updateItem` is how we tell the list to reflect changes after a successful edit,
+  // without re-fetching everything from the server.
   const { data, loading, error, updateItem } = useInventory();
   const [searchQuery, setSearchQuery]   = useState('');
   const [expandedId, setExpandedId]     = useState(null);
@@ -32,6 +34,7 @@ function InventoryPage() {
         <table className="inventory-table">
           <thead>
             <tr>
+              {/* The empty string at the end reserves the 5th column for the three-dot actions button. */}
               {['Name', 'Type', 'Location', 'Status', ''].map((col) => (
                 <th key={col}>{col}</th>
               ))}
@@ -44,6 +47,7 @@ function InventoryPage() {
                 item={item}
                 isOpen={expandedId === item.id}
                 onToggle={() => handleToggle(item.id)}
+                // Pass `updateItem` down so InventoryRow can update the list after a save.
                 onItemUpdate={updateItem}
                 className={i % 2 === 0 ? '' : 'row-shaded'}
               />
