@@ -1,4 +1,4 @@
-import { getAllInventoryService, postInventoryService, patchableColumns, patchInventoryService } from "../services/inventoryService.js";
+import { getAllInventoryService, postInventoryService getSubteamsService, patchableColumns, patchInventoryService } from "../services/inventoryService.js";
 
 /*
  * GET /inventory - Retrieve all inventory items
@@ -10,6 +10,19 @@ export const getAllInventory = async (req, res) => {
     } catch (err) {
         console.error('Error fetching inventory:', err);
         res.status(500).json({ error: 'Failed to retrieve inventory items' });
+    }
+};
+
+/*
+ * GET /inventory/subteams - Retrieve all distinct checkOutBy values
+ */
+export const getSubteams = async (req, res) => {
+    try {
+        const subteams = await getSubteamsService();
+        res.status(200).json(subteams);
+    } catch (err) {
+        console.error('Error fetching subteams:', err);
+        res.status(500).json({ error: 'Failed to retrieve subteams' });
     }
 };
 

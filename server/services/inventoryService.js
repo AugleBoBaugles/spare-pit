@@ -1,4 +1,4 @@
-import { getAllInventory, findInventoryByName, insertInventoryItem, getInventoryColumns, findInventoryById, updateInventoryItem } from '../models/inventoryModel.js';
+import { getAllInventory, findInventoryByName, insertInventoryItem, getDistinctSubteams, getInventoryColumns, findInventoryById, updateInventoryItem } from '../models/inventoryModel.js';
 
 /*
 Returns an array of all inventory items in the database. Each item includes all fields defined in the inventory schema.
@@ -24,6 +24,10 @@ export async function patchInventoryService(id, updates) {
         throw err;
     }
     return updateInventoryItem(id, { ...updates, lastUpdated: Date.now() });
+}
+
+export async function getSubteamsService() {
+    return getDistinctSubteams();
 }
 
 /*

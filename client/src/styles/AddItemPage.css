@@ -12,7 +12,7 @@
 }
 
 .add-item-page .req {
-  color: #c0392b;
+  color: var(--color-error-fg);
 }
 
 /* ── Section headings ── */
@@ -68,13 +68,13 @@
 
 .add-item-page input[aria-invalid="true"],
 .add-item-page select[aria-invalid="true"] {
-  border-color: #c0392b;
+  border-color: var(--color-error-fg);
 }
 
 .add-item-page .field-error {
   display: block;
   font-size: 12px;
-  color: #c0392b;
+  color: var(--color-error-fg);
   margin-top: 4px;
 }
 
@@ -93,8 +93,8 @@
 }
 
 .add-item-page .banner--warn {
-  background: #fefce8;
-  color: #854d0e;
+  background: var(--color-warn-bg);
+  color: var(--color-warn-fg);
   border-color: #fde047;
   border-left: 3px solid #eab308;
   margin-top: 2rem;
@@ -102,9 +102,18 @@
 }
 
 .add-item-page .banner--error {
-  background: #fff1f0;
-  color: #c0392b;
+  background: var(--color-error-bg);
+  color: var(--color-error-fg);
   border-color: #fca5a5;
+}
+
+[data-theme="dark"] .add-item-page .banner--warn {
+  border-color: #6b4000;
+  border-left-color: var(--color-warn-fg);
+}
+
+[data-theme="dark"] .add-item-page .banner--error {
+  border-color: #6b2020;
 }
 
 /* ── Submit row ── */

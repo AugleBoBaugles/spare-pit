@@ -53,6 +53,14 @@ export async function updateInventoryItem(id, fields) {
         id
     );
     return db.get('SELECT * FROM inventory WHERE id = ?', id);
+    
+// Returns all distinct non-empty checkOutBy values in the database.
+export async function getDistinctSubteams() {
+    const db = await getDb();
+    const rows = await db.all(
+        `SELECT DISTINCT checkOutBy FROM inventory WHERE checkOutBy IS NOT NULL AND checkOutBy != '' ORDER BY checkOutBy`
+    );
+    return rows.map(r => r.checkOutBy);
 }
 
 /*
