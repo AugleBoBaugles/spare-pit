@@ -1,4 +1,4 @@
-import { getAllInventoryService, postInventoryService getSubteamsService, patchableColumns, patchInventoryService } from "../services/inventoryService.js";
+import { getAllInventoryService, postInventoryService, getSubteamsService, patchableColumns, patchInventoryService } from "../services/inventoryService.js";
 
 /*
  * GET /inventory - Retrieve all inventory items

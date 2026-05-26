@@ -11,6 +11,17 @@ export async function getAllInventory() {
 }
 
 /*
+ * Returns all distinct non-empty checkOutBy values in the database.
+ */
+export async function getDistinctSubteams() {
+    const db = await getDb();
+    const rows = await db.all(
+        `SELECT DISTINCT checkOutBy FROM inventory WHERE checkOutBy IS NOT NULL AND checkOutBy != '' ORDER BY checkOutBy`
+    );
+    return rows.map(r => r.checkOutBy);
+}
+
+/*
  * Finds an inventory item by its name. Used to check for possible duplicates when adding new items.
  * Returns the inventory item if found, or undefined if no match is found.
  */
@@ -53,7 +64,8 @@ export async function updateInventoryItem(id, fields) {
         id
     );
     return db.get('SELECT * FROM inventory WHERE id = ?', id);
-    
+}
+
 // Returns all distinct non-empty checkOutBy values in the database.
 export async function getDistinctSubteams() {
     const db = await getDb();
