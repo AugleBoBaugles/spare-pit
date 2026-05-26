@@ -38,7 +38,7 @@ const EDIT_FIELDS = [
     { value: 'missing',      label: 'Missing' },
   ]},
   { key: 'area',       label: 'Area' },
-  { key: 'quantity',   label: 'Quantity' },
+  { key: 'quantity',   label: 'Quantity', numeric: true },
   { key: 'condition',  label: 'Condition',      options: [
     { value: '',      label: 'Select…' },
     { value: 'new',   label: 'New' },
@@ -87,8 +87,12 @@ function ExpandedPanel({ item, isEditing, onEditingChange, onItemUpdate }) {
   async function handleSave() {
     if (!validate()) return;
     setSaveError(null);
+    const payload = {
+      ...form,
+      quantity: form.quantity !== '' && form.quantity != null ? Number(form.quantity) : form.quantity,
+    };
     try {
-      const updated = await patchInventory(item.id, form);
+      const updated = await patchInventory(item.id, payload);
       onItemUpdate(updated);
       onEditingChange(false);
     } catch (err) {
@@ -108,7 +112,7 @@ function ExpandedPanel({ item, isEditing, onEditingChange, onItemUpdate }) {
       <tr className="expanded-panel-row">
         <td colSpan={5} className="expanded-panel-cell">
           <div className="expanded-panel expanded-panel--editing">
-            {EDIT_FIELDS.filter(({ showWhen }) => !showWhen || showWhen(form)).map(({ key, label, required, multiline, options, datalist }) => (
+            {EDIT_FIELDS.filter(({ showWhen }) => !showWhen || showWhen(form)).map(({ key, label, required, multiline, options, datalist, numeric }) => (
               <div key={key} className="expanded-panel__field">
                 <label className="expanded-panel__label" htmlFor={`edit-${key}`}>
                   {label}{required && ' *'}
@@ -134,7 +138,8 @@ function ExpandedPanel({ item, isEditing, onEditingChange, onItemUpdate }) {
                   <>
                     <input
                       id={`edit-${key}`}
-                      type="text"
+                      type={numeric ? 'number' : 'text'}
+                      min={numeric ? 0 : undefined}
                       list={datalist ? `edit-${key}-list` : undefined}
                       value={form[key] ?? ''}
                       onChange={(e) => handleChange(key, e.target.value)}
