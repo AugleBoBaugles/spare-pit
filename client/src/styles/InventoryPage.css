@@ -159,6 +159,31 @@
   font-style: italic;
 }
 
+/* Edit mode */
+
+.expanded-panel--editing {
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+}
+
+.expanded-panel__field-error {
+  font-size: 11px;
+  color: var(--color-error-fg);
+  margin-top: 2px;
+}
+
+.expanded-panel__save-error {
+  padding: 8px 24px 0;
+  font-size: 13px;
+  color: var(--color-error-fg);
+}
+
+.expanded-panel__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 24px 16px;
+}
+
 /* Three-dot actions menu */
 
 .col-actions {
