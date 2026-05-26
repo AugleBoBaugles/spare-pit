@@ -6,7 +6,7 @@ import InventoryRow from './InventoryRow';
 import '../../styles/InventoryPage.css';
 
 function InventoryPage() {
-  const { data, loading, error } = useInventory();
+  const { data, loading, error, updateItem } = useInventory();
   const [searchQuery, setSearchQuery]   = useState('');
   const [expandedId, setExpandedId]     = useState(null);
 
@@ -32,7 +32,7 @@ function InventoryPage() {
         <table className="inventory-table">
           <thead>
             <tr>
-              {['Name', 'Type', 'Location', 'Status'].map((col) => (
+              {['Name', 'Type', 'Location', 'Status', ''].map((col) => (
                 <th key={col}>{col}</th>
               ))}
             </tr>
@@ -44,6 +44,7 @@ function InventoryPage() {
                 item={item}
                 isOpen={expandedId === item.id}
                 onToggle={() => handleToggle(item.id)}
+                onItemUpdate={updateItem}
                 className={i % 2 === 0 ? '' : 'row-shaded'}
               />
             ))}

@@ -13,5 +13,9 @@ export function useInventory() {
       .finally(() => setLoading(false));
   }, []);
 
-  return { data, loading, error };
+  function updateItem(updatedItem) {
+    setData((prev) => prev.map((item) => item.id === updatedItem.id ? updatedItem : item));
+  }
+
+  return { data, loading, error, updateItem };
 }
