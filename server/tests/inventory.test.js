@@ -33,7 +33,7 @@ const mockInventory = [
     id: 2, name: 'Multimeter', type: 'tool', area: 'Electronics Lab',
     location: 'Electronics Bench 2', status: 'checked-out', quantity: 2,
     condition: 'fair', itemImage: 'images/multimeter.jpg',
-    checkOutBy: 'Jamie R.', lastUpdated: '2025-04-10 14:30:00',
+    checkOutBy: 'electrical', lastUpdated: '2025-04-10 14:30:00',
     tags: 'electronics,testing', notes: 'One unit has a cracked screen but works fine'
   },
 ];
@@ -266,8 +266,8 @@ describe('POST /api/inventory', () => {
 describe('PATCH /api/inventory/:id', () => {
     afterEach(() => jest.resetAllMocks());
 
-    const validPatchBody = { status: 'checked-out', checkOutBy: 'Alex T.' };
-    const updatedItem = { ...mockInventory[0], status: 'checked-out', checkOutBy: 'Alex T.', lastUpdated: Date.now() };
+    const validPatchBody = { status: 'checked-out', checkOutBy: 'mechanical' };
+    const updatedItem = { ...mockInventory[0], status: 'checked-out', checkOutBy: 'mechanical', lastUpdated: Date.now() };
 
     test('200: returns updated item on success', async () => {
         mockPatchInventoryService.mockResolvedValue(updatedItem);
@@ -276,7 +276,33 @@ describe('PATCH /api/inventory/:id', () => {
         const res = await request(app).patch('/api/inventory/1').send(validPatchBody);
 
         expect(res.status).toBe(200);
-        expect(res.body).toMatchObject({ id: 1, status: 'checked-out', checkOutBy: 'Alex T.' });
+        expect(res.body).toMatchObject({ id: 1, status: 'checked-out', checkOutBy: 'mechanical' });
+    });
+
+    test.each([
+        ['name',       'Updated Drill'],
+        ['type',       'part'],
+        ['area',       'New Area'],
+        ['location',   'New Location'],
+        ['status',     'missing'],
+        ['quantity',   5],
+        ['condition',  'fair'],
+        ['itemImage',  'images/new.jpg'],
+        ['checkOutBy', 'programming'],
+        ['tags',       'new,tags'],
+        ['notes',      'Updated notes'],
+    ])('200: correctly patches %s field to service and returns it', async (field, value) => {
+        const returnedItem = { ...mockInventory[0], [field]: value };
+        mockPatchInventoryService.mockResolvedValue(returnedItem);
+
+        const { default: request } = await import('supertest');
+        const res = await request(app).patch('/api/inventory/1').send({ [field]: value });
+
+        expect(res.status).toBe(200);
+        expect(res.body[field]).toEqual(value);
+
+        const [, updates] = mockPatchInventoryService.mock.calls[0];
+        expect(updates).toHaveProperty(field, value);
     });
 
     test('200: strips unknown fields and only passes patchable fields to service', async () => {
