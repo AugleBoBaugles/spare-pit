@@ -1,9 +1,14 @@
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import InventoryRow from './InventoryRow';
 import ExpandedPanel, { ITEM_FIELDS, FALLBACK } from './ExpandedPanel';
+import { patchInventory } from '../../lib/api';
+
+vi.mock('../../lib/api', () => ({
+  patchInventory: vi.fn(),
+}));
 
 // ---------------------------------------------------------------------------
 // Shared fixtures
@@ -36,12 +41,37 @@ const nullFieldItem = {
   itemImage: null,
 };
 
+beforeEach(() => {
+  patchInventory.mockReset();
+  global.fetch = vi.fn().mockResolvedValue({
+    ok: true,
+    json: () => Promise.resolve([]),
+  });
+});
+
 // Helper — renders a single InventoryRow inside a valid table structure.
 function renderRow(props) {
   return render(
     <table>
       <tbody>
-        <InventoryRow {...props} />
+        <InventoryRow onItemUpdate={vi.fn()} {...props} />
+      </tbody>
+    </table>
+  );
+}
+
+// Helper — renders ExpandedPanel directly inside a valid table structure.
+function renderPanel(props) {
+  return render(
+    <table>
+      <tbody>
+        <ExpandedPanel
+          item={baseItem}
+          isEditing={false}
+          onEditingChange={vi.fn()}
+          onItemUpdate={vi.fn()}
+          {...props}
+        />
       </tbody>
     </table>
   );
@@ -68,7 +98,7 @@ describe('InventoryRow — accordion behaviour', () => {
     const onToggle = vi.fn();
     renderRow({ item: baseItem, isOpen: false, onToggle });
 
-    await userEvent.click(screen.getByRole('button'));
+    await userEvent.click(screen.getByRole('button', { name: /cordless drill/i }));
 
     expect(onToggle).toHaveBeenCalledOnce();
   });
@@ -77,7 +107,7 @@ describe('InventoryRow — accordion behaviour', () => {
     const onToggle = vi.fn();
     renderRow({ item: baseItem, isOpen: true, onToggle });
 
-    await userEvent.click(screen.getByRole('button'));
+    await userEvent.click(screen.getByRole('button', { name: /cordless drill/i }));
 
     expect(onToggle).toHaveBeenCalledOnce();
   });
@@ -94,10 +124,9 @@ describe('InventoryPage — one row open at a time', () => {
       { ...baseItem, id: 2, name: 'Item B' },
     ];
 
-    // Simulate the expandedId logic from InventoryPage.
     const expandedId = 1;
 
-    const { getAllByRole } = render(
+    render(
       <table>
         <tbody>
           {items.map((item) => (
@@ -106,6 +135,7 @@ describe('InventoryPage — one row open at a time', () => {
               item={item}
               isOpen={expandedId === item.id}
               onToggle={vi.fn()}
+              onItemUpdate={vi.fn()}
             />
           ))}
         </tbody>
@@ -123,13 +153,7 @@ describe('InventoryPage — one row open at a time', () => {
 
 describe('ExpandedPanel — field rendering', () => {
   it('renders a label and value for every field in ITEM_FIELDS', () => {
-    render(
-      <table>
-        <tbody>
-          <ExpandedPanel item={baseItem} />
-        </tbody>
-      </table>
-    );
+    renderPanel({ item: baseItem });
 
     for (const { label } of ITEM_FIELDS) {
       expect(screen.getByText(label)).toBeInTheDocument();
@@ -137,13 +161,7 @@ describe('ExpandedPanel — field rendering', () => {
   });
 
   it('renders the correct value for each populated field', () => {
-    render(
-      <table>
-        <tbody>
-          <ExpandedPanel item={baseItem} />
-        </tbody>
-      </table>
-    );
+    renderPanel({ item: baseItem });
 
     expect(screen.getByText('Machine Shop')).toBeInTheDocument();
     expect(screen.getByText('2')).toBeInTheDocument();
@@ -154,18 +172,125 @@ describe('ExpandedPanel — field rendering', () => {
   });
 
   it(`shows "${FALLBACK}" for every null or missing field`, () => {
-    render(
-      <table>
-        <tbody>
-          <ExpandedPanel item={nullFieldItem} />
-        </tbody>
-      </table>
-    );
+    renderPanel({ item: nullFieldItem });
 
     const fallbacks = screen.getAllByText(FALLBACK);
-
-    // Every field in nullFieldItem is null, so every field should show the fallback.
     const nullCount = ITEM_FIELDS.filter(({ key }) => nullFieldItem[key] == null).length;
     expect(fallbacks).toHaveLength(nullCount);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Three-dot actions menu
+// ---------------------------------------------------------------------------
+
+describe('InventoryRow — three-dot actions menu', () => {
+  it('renders the three-dot button on a collapsed row', () => {
+    renderRow({ item: baseItem, isOpen: false, onToggle: vi.fn() });
+
+    expect(screen.getByRole('button', { name: 'Row actions' })).toBeInTheDocument();
+  });
+
+  it('renders the three-dot button on an expanded row', () => {
+    renderRow({ item: baseItem, isOpen: true, onToggle: vi.fn() });
+
+    expect(screen.getByRole('button', { name: 'Row actions' })).toBeInTheDocument();
+  });
+
+  it('clicking the three-dot button does not call onToggle', async () => {
+    const onToggle = vi.fn();
+    renderRow({ item: baseItem, isOpen: false, onToggle });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Row actions' }));
+
+    expect(onToggle).not.toHaveBeenCalled();
+  });
+
+  it('clicking the three-dot button opens a dropdown with an Edit option', async () => {
+    renderRow({ item: baseItem, isOpen: false, onToggle: vi.fn() });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Row actions' }));
+
+    expect(screen.getByRole('menuitem', { name: 'Edit' })).toBeInTheDocument();
+  });
+
+  it('clicking outside the open dropdown closes it without entering edit mode', async () => {
+    renderRow({ item: baseItem, isOpen: false, onToggle: vi.fn() });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Row actions' }));
+    expect(screen.getByRole('menu')).toBeInTheDocument();
+
+    await userEvent.click(document.body);
+
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+  });
+
+  it('clicking Edit on a collapsed row calls onToggle', async () => {
+    const onToggle = vi.fn();
+    renderRow({ item: baseItem, isOpen: false, onToggle });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Row actions' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Edit' }));
+
+    expect(onToggle).toHaveBeenCalledOnce();
+  });
+
+  it('clicking Edit on an already-expanded row does not call onToggle', async () => {
+    const onToggle = vi.fn();
+    renderRow({ item: baseItem, isOpen: true, onToggle });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Row actions' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Edit' }));
+
+    expect(onToggle).not.toHaveBeenCalled();
+  });
+
+  it('clicking Edit on an expanded row opens the panel in edit mode', async () => {
+    renderRow({ item: baseItem, isOpen: true, onToggle: vi.fn() });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Row actions' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Edit' }));
+
+    expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// ExpandedPanel — edit mode
+// ---------------------------------------------------------------------------
+
+describe('ExpandedPanel — edit mode', () => {
+  it('Cancel exits edit mode without calling the API', async () => {
+    const onEditingChange = vi.fn();
+    renderPanel({ isEditing: true, onEditingChange });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    expect(onEditingChange).toHaveBeenCalledWith(false);
+    expect(patchInventory).not.toHaveBeenCalled();
+  });
+
+  it('Save with valid data calls patchInventory and exits edit mode', async () => {
+    const onEditingChange = vi.fn();
+    const onItemUpdate = vi.fn();
+    const updatedItem = { ...baseItem, status: 'checked-out' };
+    patchInventory.mockResolvedValueOnce(updatedItem);
+
+    renderPanel({ isEditing: true, onEditingChange, onItemUpdate });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() => expect(onEditingChange).toHaveBeenCalledWith(false));
+    expect(patchInventory).toHaveBeenCalledWith(baseItem.id, expect.objectContaining({ name: baseItem.name }));
+    expect(onItemUpdate).toHaveBeenCalledWith(updatedItem);
+  });
+
+  it('Save with an empty required field shows a validation error and does not submit', async () => {
+    renderPanel({ item: { ...baseItem, name: '' }, isEditing: true });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(screen.getByText('Required')).toBeInTheDocument();
+    expect(patchInventory).not.toHaveBeenCalled();
   });
 });
