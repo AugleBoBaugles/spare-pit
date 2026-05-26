@@ -40,8 +40,39 @@ start.bat
 ## User Guide
 **Contents**
 
+1. [Viewing and Editing Inventory](#viewing-and-editing-inventory)
 1. [Dark Mode](#dark-mode)
 1. [Troubleshooting](#troubleshooting)
+
+### Viewing and Editing Inventory
+
+#### Browsing the inventory
+
+The inventory page shows a table of all tools, parts, and materials your team has logged. Each row shows the item name, type, location, and current status.
+
+Click any row to expand it and see more details — area, quantity, condition, tags, and notes.
+
+Click the row again to collapse it.
+
+#### Status meanings
+
+| Status | What it means |
+|---|---|
+| Available | In the pit and ready to use |
+| Checked out | Signed out by a subteam — see "Checked out by" for who has it |
+| Maintenance | Out of service, do not use |
+| Missing | Cannot be located — report to a lead if you find it |
+
+#### Editing an item
+
+1. Find the item in the inventory list. Use the search bar at the top to filter by name, type, location, or status.
+2. Click the **⋯** button at the right end of the row to open the actions menu.
+3. Click **Edit**. The row expands and all fields become editable inputs.
+4. Make your changes. Required fields (marked with **\***) cannot be left blank.
+5. If you set the status to **Checked out**, a "Checked out by" field will appear — enter your subteam name (e.g. `electrical`, `programming`).
+6. Click **Save** to apply your changes, or **Cancel** to discard them and go back to the read view.
+
+If something goes wrong when saving, an error message will appear below the form. Your edits are preserved so you can try again.
 
 ### Dark Mode
 
