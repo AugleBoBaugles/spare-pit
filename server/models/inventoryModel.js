@@ -20,15 +20,6 @@ export async function findInventoryByName(name) {
 }
 
 /*
- * Finds an inventory item by its id. Used to check if an item exists before updating or deleting it.
- * Returns the inventory item if found, or undefined if no match is found.
- */
-export async function findInventoryById(id) {
-    const db = await getDb();
-    return db.get('SELECT * FROM inventory WHERE id = ?', id);
-}
-
-/*
  * Returns the list of column names for the inventory table, derived directly from the schema.
  * Used by the service layer to validate incoming fields against the current table structure.
  */
@@ -88,3 +79,23 @@ export async function insertInventoryItem(item) {
     );
     return db.get('SELECT * FROM inventory WHERE id = ?', result.lastID);
 }
+
+/*
+ * Finds an inventory item by its ID. Used for operations like deletion or updates.
+ * Returns the inventory item if found, or null if no match is found.
+ */
+export const findInventoryById = async (id) => {
+    const db = await getDb();
+
+    const result = await db.get('SELECT * FROM inventory WHERE id = ?', [id]);
+    return result ?? null;
+};
+
+/*
+ * Deletes an inventory item from the database by its ID.
+ * Returns the result of the delete operation.
+ */
+export const deleteInventoryById = async (id) => {
+    const db = await getDb();
+    return db.run('DELETE FROM inventory WHERE id = ?', [id]);
+};

@@ -41,6 +41,7 @@ start.bat
 **Contents**
 
 1. [Viewing and Editing Inventory](#viewing-and-editing-inventory)
+1. [Deleting an Item](#deleting-an-item)
 1. [Dark Mode](#dark-mode)
 1. [Troubleshooting](#troubleshooting)
 
@@ -73,6 +74,20 @@ Click the row again to collapse it.
 6. Click **Save** to apply your changes, or **Cancel** to discard them and go back to the read view.
 
 If something goes wrong when saving, an error message will appear below the form. Your edits are preserved so you can try again.
+
+### Deleting an Item
+
+Use this when a tool should be permanently removed from the inventory — for example, when it has been retired from the team's kit or when a duplicate entry needs to be cleaned up.
+
+1. Find the item in the inventory list.
+2. Click the **⋯** button at the right end of the row to open the actions menu.
+3. Click **Delete** (shown in red to signal it is a destructive action).
+4. A confirmation dialog will appear. Type `DELETE` (all caps, case-sensitive) into the text box to confirm.
+5. Click **Confirm** to permanently remove the item, or **Cancel** to go back without making any changes.
+
+If the delete fails (for example, due to a network error), the dialog will close and an error message will appear below the item row. The item will remain in the inventory — you can try again.
+
+> **Warning:** Deleting an item is permanent and cannot be undone. Make sure you have the right item before confirming.
 
 ### Dark Mode
 
@@ -121,3 +136,32 @@ App -> Routers -> Controllers -> Services -> Models -> DB
 **Models** (`models/`) are the only layer that talks to the database directly. They contain the SQL queries and return raw results up to the service.
 
 **DB** (`db/db.js`) opens and manages the SQLite database connection.
+
+### Delete Inventory Item
+
+**Route:** `DELETE /api/inventory/:id`
+
+**Success response (200):**
+```json
+{
+  "message": "Cordless Drill has been deleted from the inventory",
+  "deleted": { "id": 1, "name": "Cordless Drill", ... }
+}
+```
+
+**Error responses:**
+| Status | Condition |
+|---|---|
+| 404 | No item with the given `:id` exists in the database |
+| 500 | Unexpected server error |
+
+**Frontend data flow:**
+
+```
+User clicks Delete
+  → handleDeleteClick() closes the dropdown and opens DeleteConfirmModal
+  → User types "DELETE" and clicks Confirm
+  → DeleteConfirmModal calls deleteInventory(id) (DELETE /api/inventory/:id)
+  → On success: onDelete(id) removes the item from useInventory state; modal closes
+  → On failure: onError(msg) sets deleteError in InventoryRow; modal closes; error row renders
+```

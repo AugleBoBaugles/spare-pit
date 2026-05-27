@@ -1,5 +1,6 @@
 // A single inventory table row. Renders a summary row and, when open, the ExpandedPanel beneath it.
 import { useEffect, useRef, useState } from 'react';
+import DeleteConfirmModal from './DeleteConfirmModal';
 import ExpandedPanel from './ExpandedPanel';
 
 // Maps a status value to its CSS class for the coloured pill badge.
@@ -9,12 +10,17 @@ function getStatusClass(status) {
   return 'status-in-use';
 }
 
-// `onItemUpdate` bubbles up to InventoryPage so the list reflects edits without a re-fetch.
-function InventoryRow({ item, isOpen, onToggle, onItemUpdate }) {
+// `onItemUpdate` bubbles edited data up; `onDelete` bubbles the deleted id up — both keep
+// the list in sync without a full re-fetch from the server.
+function InventoryRow({ item, isOpen, onToggle, onItemUpdate, onDelete }) {
   // Controls whether the three-dot dropdown is visible.
   const [menuOpen, setMenuOpen] = useState(false);
   // Controls whether ExpandedPanel is in edit mode or read mode.
   const [isEditing, setIsEditing] = useState(false);
+  // Controls whether the delete confirmation modal is visible.
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  // Holds an error message if a delete request fails; shown inline below the row.
+  const [deleteError, setDeleteError] = useState(null);
   // A ref attached to the dropdown container so we can detect clicks outside it.
   const menuRef = useRef(null);
 
@@ -36,6 +42,12 @@ function InventoryRow({ item, isOpen, onToggle, onItemUpdate }) {
     // If the row is collapsed, expand it first so the panel is visible before edit mode opens.
     if (!isOpen) onToggle();
     setIsEditing(true);
+  }
+
+  // Called when the user clicks "Delete" in the dropdown.
+  function handleDeleteClick() {
+    setMenuOpen(false);
+    setShowDeleteModal(true);
   }
 
   return (
@@ -85,16 +97,32 @@ function InventoryRow({ item, isOpen, onToggle, onItemUpdate }) {
                 <li role="none">
                   <button role="menuitem" onClick={handleEditClick}>Edit</button>
                 </li>
-                {/* Delete is stubbed out as disabled so the menu structure is already
-                    in place for when the feature is built. */}
                 <li role="none">
-                  <button role="menuitem" disabled>Delete</button>
+                  <button role="menuitem" className="btn-delete" onClick={handleDeleteClick}>Delete</button>
                 </li>
               </ul>
             )}
           </div>
         </td>
       </tr>
+
+      {/* If a delete request fails, show the error as a full-width row directly below
+          the affected item so it's visually connected. colSpan={5} spans all table columns.
+          The dismiss button lets the user clear the message once they've read it. */}
+      {deleteError && (
+        <tr className="delete-error-row">
+          <td colSpan={5} className="delete-error-cell">
+            {deleteError}
+            <button
+              className="delete-error-dismiss"
+              onClick={() => setDeleteError(null)}
+              aria-label="Dismiss error"
+            >
+              ✕
+            </button>
+          </td>
+        </tr>
+      )}
 
       {/* ExpandedPanel only renders when the row is open.
           We pass isEditing and onEditingChange so the panel knows which mode to display,
@@ -105,6 +133,18 @@ function InventoryRow({ item, isOpen, onToggle, onItemUpdate }) {
           isEditing={isEditing}
           onEditingChange={setIsEditing}
           onItemUpdate={onItemUpdate}
+        />
+      )}
+
+      {/* DeleteConfirmModal uses createPortal to render on document.body, so placing it
+          here in the fragment doesn't violate table DOM rules. onError stores the message
+          in local state so it displays as the error row above after the modal closes. */}
+      {showDeleteModal && (
+        <DeleteConfirmModal
+          item={item}
+          onClose={() => setShowDeleteModal(false)}
+          onDelete={onDelete}
+          onError={(msg) => setDeleteError(msg)}
         />
       )}
     </>

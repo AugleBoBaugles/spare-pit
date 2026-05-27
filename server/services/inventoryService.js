@@ -1,4 +1,4 @@
-import { getAllInventory, findInventoryByName, insertInventoryItem, getDistinctSubteams, getInventoryColumns, findInventoryById, updateInventoryItem } from '../models/inventoryModel.js';
+import { getAllInventory, findInventoryByName, insertInventoryItem, getDistinctSubteams, getInventoryColumns, findInventoryById, updateInventoryItem, deleteInventoryById} from '../models/inventoryModel.js';
 
 /*
 Returns an array of all inventory items in the database. Each item includes all fields defined in the inventory schema.
@@ -39,3 +39,19 @@ export async function postInventoryService(item) {
 
     return { ...newItem, possibleDuplicate: possibleDuplicate ? possibleDuplicate : null };
 }
+
+/*
+Deletes an inventory item by its ID. If the item is not found, an error is thrown.
+Returns the deleted inventory item.
+*/
+export const deleteInventoryService = async (id) => {
+    const inventory = await findInventoryById(id);
+
+    if (!inventory) {
+        throw new Error('Inventory item not found');
+    }
+
+    await deleteInventoryById(id);
+
+    return inventory;
+};
