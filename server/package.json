@@ -10,8 +10,8 @@
     "init-db": "node scripts/initDbScript.js",
     "seed-db": "node scripts/seedDbScript.js",
     "reset-db": "node scripts/deleteDbScript.js && node scripts/initDbScript.js",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
-    "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
+    "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --coverage"
   },
   "author": "",
   "contributors": [

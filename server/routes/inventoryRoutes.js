@@ -1,9 +1,12 @@
 import express from 'express';
-import { getAllInventory, postTool } from '../controllers/inventoryController.js';
+import { getAllInventory, postTool, patchInventory, getSubteams, deleteTool} from '../controllers/inventoryController.js';
 
 const inventoryRouter = express.Router();
 
+inventoryRouter.get('/inventory/subteams', getSubteams);
 inventoryRouter.get('/inventory', getAllInventory);
 inventoryRouter.post('/inventory', postTool);
+inventoryRouter.delete('/inventory/:id', deleteTool);
+inventoryRouter.patch('/inventory/:id', patchInventory);
 
 export default inventoryRouter;

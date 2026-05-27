@@ -118,4 +118,45 @@ describe('AddItemPage', () => {
     await user.click(screen.getByRole('button', { name: /cancel/i }))
     expect(onNavigate).toHaveBeenCalledWith('inventory')
   })
+
+  it('fetches subteams from the API on mount', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(['electrical', 'mechanical']),
+    }))
+    render(<AddItemPage onNavigate={onNavigate} />)
+    await waitFor(() => expect(fetch).toHaveBeenCalledWith('/api/inventory/subteams'))
+  })
+
+  it('populates the datalist with fetched subteams', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(['electrical', 'mechanical', 'programming']),
+    }))
+    const user = userEvent.setup()
+    render(<AddItemPage onNavigate={onNavigate} />)
+    await user.selectOptions(screen.getByLabelText(/^status/i), 'checked-out')
+    await waitFor(() => {
+      expect(document.getElementById('subteam-options').options).toHaveLength(3)
+    })
+  })
+
+  it('allows typing a custom subteam value not in the list', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(['electrical']),
+    }))
+    const user = userEvent.setup()
+    render(<AddItemPage onNavigate={onNavigate} />)
+    await user.selectOptions(screen.getByLabelText(/^status/i), 'checked-out')
+    const input = screen.getByLabelText(/checked out by/i)
+    await user.type(input, 'robotics')
+    expect(input).toHaveValue('robotics')
+  })
+
+  it('still renders the form when the subteams fetch fails', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Network error')))
+    render(<AddItemPage onNavigate={onNavigate} />)
+    expect(screen.getByRole('button', { name: /add item/i })).toBeInTheDocument()
+  })
 })

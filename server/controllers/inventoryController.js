@@ -1,4 +1,4 @@
-import { getAllInventoryService, postInventoryService } from "../services/inventoryService.js";
+import { getAllInventoryService, postInventoryService, getSubteamsService, patchableColumns, patchInventoryService, deleteInventoryService } from "../services/inventoryService.js";
 
 /*
  * GET /inventory - Retrieve all inventory items
@@ -10,6 +10,19 @@ export const getAllInventory = async (req, res) => {
     } catch (err) {
         console.error('Error fetching inventory:', err);
         res.status(500).json({ error: 'Failed to retrieve inventory items' });
+    }
+};
+
+/*
+ * GET /inventory/subteams - Retrieve all distinct checkOutBy values
+ */
+export const getSubteams = async (req, res) => {
+    try {
+        const subteams = await getSubteamsService();
+        res.status(200).json(subteams);
+    } catch (err) {
+        console.error('Error fetching subteams:', err);
+        res.status(500).json({ error: 'Failed to retrieve subteams' });
     }
 };
 
@@ -61,4 +74,75 @@ export const postTool = async (req, res) => {
         console.error('Error posting tool:', err);
         res.status(500).json({ error: 'Failed to add inventory item' });
     }
-}
+};
+
+/*
+ * DELETE /inventory/:id - Delete an inventory item
+ */
+export const deleteTool = async (req, res) => {
+    const id = req.params.id;
+
+    if (!id) {
+        return res.status(404).json({ error: 'ID parameter is required' });
+    }
+
+    try {
+        const deletedItem = await deleteInventoryService(id);
+        return res.status(200).json({
+            message: `${deletedItem.name} has been deleted from the inventory`,
+            deleted: deletedItem,
+        });
+    } catch (err) {
+        console.error('Error deleting inventory item:', err);
+        if (err.message === 'Inventory item not found') {
+            return res.status(404).json({ error: 'Inventory item not found' });
+        }
+        return res.status(500).json({ error: 'Failed to delete inventory item' });
+    }
+};
+
+
+/*
+PATCH /inventory/:id - Update an existing inventory item
+Expected JSON body can include any of the following fields to update:
+{
+    "name": "Updated Tool Name",
+    "type": "Updated Tool Type",
+    "area": "Updated Storage Area",
+    "location": "Updated Specific Location",
+    "status": "available/checked out/needs repair",
+    "quantity": 5,               // must be a non-negative integer
+    "condition": "good/fair/poor",
+    "itemImage": "images/updated_image.jpg",
+    "checkOutBy": "Updated Person Name",
+    "tags": "updated_tag1, updated_tag2",
+    "notes": "Updated notes about the tool"
+}   
+ */
+export const patchInventory = async (req, res) => {
+    const id = req.params.id;
+
+    const updates = {};
+    for (const field of patchableColumns) {
+        if (req.body[field] !== undefined) {
+            updates[field] = req.body[field];
+        }
+    }
+
+    if (Object.keys(updates).length === 0) {
+        return res.status(400).json({ error: `Request body must include at least one valid field: ${patchableColumns.join(', ')}` });
+    }
+
+    // Validate quantity is a number if provided
+    if (updates.quantity !== undefined && (!Number.isInteger(updates.quantity) || updates.quantity < 0)) {
+        return res.status(400).json({ error: 'quantity must be a non-negative integer' });
+    }
+
+    try {
+        const updated = await patchInventoryService(id, updates);
+        res.status(200).json(updated);
+    } catch (err) {
+        console.error('Error patching inventory:', err);
+        res.status(err.status || 500).json({ error: err.message || 'Failed to update inventory item' });
+    }
+}   
