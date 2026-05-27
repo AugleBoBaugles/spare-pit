@@ -21,3 +21,10 @@ export async function patchInventory(id, fields) {
   if (!response.ok) throw new Error('Failed to update inventory item');
   return response.json();
 }
+
+// Permanently removes one inventory item from the database.
+export async function deleteInventory(id) {
+  const response = await fetch(`/api/inventory/${id}`, { method: 'DELETE' });
+  if (!response.ok) throw new Error('Failed to delete inventory item');
+  return response.json();
+}

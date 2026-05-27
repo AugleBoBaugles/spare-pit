@@ -20,5 +20,11 @@ export function useInventory() {
     setData((prev) => prev.map((item) => item.id === updatedItem.id ? updatedItem : item));
   }
 
-  return { data, loading, error, updateItem };
+  // After a successful DELETE, filter the removed item out of local state so the list
+  // updates instantly without a full page re-fetch.
+  function deleteItem(id) {
+    setData((prev) => prev.filter((item) => item.id !== id));
+  }
+
+  return { data, loading, error, updateItem, deleteItem };
 }

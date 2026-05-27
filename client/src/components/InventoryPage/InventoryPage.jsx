@@ -6,9 +6,8 @@ import InventoryRow from './InventoryRow';
 import '../../styles/InventoryPage.css';
 
 function InventoryPage() {
-  // `updateItem` is how we tell the list to reflect changes after a successful edit,
-  // without re-fetching everything from the server.
-  const { data, loading, error, updateItem } = useInventory();
+  // `updateItem` reflects edits; `deleteItem` removes an item — both avoid a full re-fetch.
+  const { data, loading, error, updateItem, deleteItem } = useInventory();
   const [searchQuery, setSearchQuery]   = useState('');
   const [expandedId, setExpandedId]     = useState(null);
 
@@ -47,8 +46,9 @@ function InventoryPage() {
                 item={item}
                 isOpen={expandedId === item.id}
                 onToggle={() => handleToggle(item.id)}
-                // Pass `updateItem` down so InventoryRow can update the list after a save.
                 onItemUpdate={updateItem}
+                // Pass `deleteItem` down so InventoryRow can remove the item after a delete.
+                onDelete={deleteItem}
                 className={i % 2 === 0 ? '' : 'row-shaded'}
               />
             ))}

@@ -250,3 +250,106 @@
   color: var(--color-text-tertiary);
   cursor: not-allowed;
 }
+
+.row-menu__dropdown li button.btn-delete {
+  color: var(--color-error-fg);
+}
+
+.row-menu__dropdown li button.btn-delete:hover {
+  background: var(--color-error-bg);
+}
+
+/* Delete error row — shown inline below the inventory row on a failed delete */
+
+.delete-error-row td {
+  padding: 6px 12px;
+  font-size: 13px;
+  color: var(--color-error-fg);
+  background: var(--color-error-bg);
+}
+
+.delete-error-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.delete-error-dismiss {
+  background: none;
+  border: none;
+  color: var(--color-error-fg);
+  font-size: 12px;
+  padding: 2px 4px;
+  cursor: pointer;
+  line-height: 1;
+  border-radius: var(--radius-sm);
+}
+
+.delete-error-dismiss:hover {
+  background: none;
+  color: var(--color-error-fg);
+  opacity: 0.7;
+}
+
+/* Delete confirmation modal */
+
+.delete-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.delete-modal {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  max-width: 400px;
+  width: 90%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.delete-modal__message {
+  font-size: 14px;
+  color: var(--color-text-primary);
+  line-height: 1.6;
+}
+
+.delete-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.delete-modal__confirm-btn {
+  background: var(--color-error-fg);
+  border-color: var(--color-error-fg);
+  color: #fff;
+}
+
+.delete-modal__confirm-btn:hover:not(:disabled) {
+  background: #8b1e1e;
+  border-color: #8b1e1e;
+  color: #fff;
+}
+
+.delete-modal__confirm-btn:disabled {
+  background: var(--color-error-fg);
+  border-color: var(--color-error-fg);
+  color: #fff;
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.delete-modal__confirm-btn:disabled:hover {
+  background: var(--color-error-fg);
+  border-color: var(--color-error-fg);
+  color: #fff;
+}
