@@ -20,6 +20,51 @@ export async function findInventoryByName(name) {
 }
 
 /*
+ * Finds an inventory item by its id. Used to check if an item exists before updating or deleting it.
+ * Returns the inventory item if found, or undefined if no match is found.
+ */
+export async function findInventoryById(id) {
+    const db = await getDb();
+    return db.get('SELECT * FROM inventory WHERE id = ?', id);
+}
+
+/*
+ * Returns the list of column names for the inventory table, derived directly from the schema.
+ * Used by the service layer to validate incoming fields against the current table structure.
+ */
+export async function getInventoryColumns() {
+    const db = await getDb();
+    const rows = await db.all('PRAGMA table_info(inventory)');
+    return rows.map(row => row.name);
+}
+
+/*
+ * Updates an inventory item by its ID with the provided fields.
+ * Returns the updated item.
+ */
+export async function updateInventoryItem(id, fields) {
+    const db = await getDb();
+    const entries = Object.entries(fields);
+    const setClauses = entries.map(([col]) => `${col} = ?`).join(', ');
+    const values = entries.map(([, val]) => val);
+    await db.run(
+        `UPDATE inventory SET ${setClauses} WHERE id = ?`,
+        ...values,
+        id
+    );
+    return db.get('SELECT * FROM inventory WHERE id = ?', id);
+}
+
+// Returns all distinct non-empty checkOutBy values in the database.
+export async function getDistinctSubteams() {
+    const db = await getDb();
+    const rows = await db.all(
+        `SELECT DISTINCT checkOutBy FROM inventory WHERE checkOutBy IS NOT NULL AND checkOutBy != '' ORDER BY checkOutBy`
+    );
+    return rows.map(r => r.checkOutBy);
+}
+
+/*
  * Inserts a new inventory item into the database.
  * Returns the inserted item.
  */

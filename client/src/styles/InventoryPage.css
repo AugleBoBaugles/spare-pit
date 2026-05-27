@@ -49,6 +49,10 @@
   background: rgba(17, 17, 16, 0.04);
 }
 
+[data-theme="dark"] .inventory-row:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
 .inventory-row--expanded {
   background: var(--color-surface);
   border-bottom: none;
@@ -91,6 +95,21 @@
 .status-missing {
   background: #FCEBEB;
   color: #A32D2D;
+}
+
+[data-theme="dark"] .status-available {
+  background: #1a2e0f;
+  color: #7ec850;
+}
+
+[data-theme="dark"] .status-in-use {
+  background: var(--color-warn-bg);
+  color: var(--color-warn-fg);
+}
+
+[data-theme="dark"] .status-missing {
+  background: var(--color-error-bg);
+  color: var(--color-error-fg);
 }
 
 /* ExpandedPanel — detail view below an expanded row */
@@ -138,4 +157,96 @@
 .expanded-panel__value--empty {
   color: var(--color-text-tertiary);
   font-style: italic;
+}
+
+/* Edit mode */
+
+.expanded-panel--editing {
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+}
+
+.expanded-panel__field-error {
+  font-size: 11px;
+  color: var(--color-error-fg);
+  margin-top: 2px;
+}
+
+.expanded-panel__save-error {
+  padding: 8px 24px 0;
+  font-size: 13px;
+  color: var(--color-error-fg);
+}
+
+.expanded-panel__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 24px 16px;
+}
+
+/* Three-dot actions menu */
+
+.col-actions {
+  width: 40px;
+  padding: 0 4px;
+  text-align: center;
+}
+
+.row-menu {
+  position: relative;
+  display: inline-block;
+}
+
+.row-menu__trigger {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  color: var(--color-text-secondary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  line-height: 1;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.row-menu__trigger:hover {
+  background: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+.row-menu__dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 100;
+  min-width: 130px;
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border-strong);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.row-menu__dropdown li button {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 8px 14px;
+  font-size: 14px;
+  cursor: pointer;
+  color: var(--color-text-primary);
+  border-radius: 4px;
+  transition: background 0.1s ease;
+}
+
+.row-menu__dropdown li button:hover:not(:disabled) {
+  background: var(--color-surface);
+}
+
+.row-menu__dropdown li button:disabled {
+  color: var(--color-text-tertiary);
+  cursor: not-allowed;
 }
