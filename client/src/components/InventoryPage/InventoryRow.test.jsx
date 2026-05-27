@@ -335,6 +335,7 @@ describe('InventoryRow — delete action', () => {
 
     const deleteBtn = screen.getByRole('menuitem', { name: 'Delete' });
     expect(deleteBtn).toBeInTheDocument();
+    // btn-delete applies the red warning colour defined in InventoryPage.css.
     expect(deleteBtn).toHaveClass('btn-delete');
   });
 
@@ -345,7 +346,9 @@ describe('InventoryRow — delete action', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Row actions' }));
     await userEvent.click(screen.getByRole('menuitem', { name: 'Delete' }));
 
+    // The dialog is rendered via createPortal to document.body so it's still queryable via screen.
     expect(screen.getByRole('dialog')).toBeInTheDocument();
+    // handleDeleteClick must not call onToggle — that would accidentally expand/collapse the row.
     expect(onToggle).not.toHaveBeenCalled();
   });
 
@@ -355,6 +358,7 @@ describe('InventoryRow — delete action', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Row actions' }));
     await userEvent.click(screen.getByRole('menuitem', { name: 'Delete' }));
 
+    // No text typed yet — Confirm must be unreachable.
     expect(screen.getByRole('button', { name: 'Confirm' })).toBeDisabled();
   });
 
@@ -364,6 +368,7 @@ describe('InventoryRow — delete action', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Row actions' }));
     await userEvent.click(screen.getByRole('menuitem', { name: 'Delete' }));
 
+    // Lowercase "delete" must not satisfy the case-sensitive check.
     await userEvent.type(screen.getByRole('textbox'), 'delete');
 
     expect(screen.getByRole('button', { name: 'Confirm' })).toBeDisabled();
@@ -390,6 +395,7 @@ describe('InventoryRow — delete action', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
 
+    // Modal must be gone and no DELETE request should have been sent.
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(deleteInventory).not.toHaveBeenCalled();
   });
@@ -404,7 +410,9 @@ describe('InventoryRow — delete action', () => {
     await userEvent.type(screen.getByRole('textbox'), 'DELETE');
     await userEvent.click(screen.getByRole('button', { name: 'Confirm' }));
 
+    // waitFor handles the async gap while the delete promise resolves.
     await waitFor(() => expect(deleteInventory).toHaveBeenCalledWith(baseItem.id));
+    // onDelete fires after the API succeeds so the parent can remove the item from state.
     expect(onDelete).toHaveBeenCalledWith(baseItem.id);
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
@@ -419,8 +427,11 @@ describe('InventoryRow — delete action', () => {
     await userEvent.type(screen.getByRole('textbox'), 'DELETE');
     await userEvent.click(screen.getByRole('button', { name: 'Confirm' }));
 
+    // Modal closes even on failure so the user can see the item is still in the list.
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    // onDelete must not fire — the item should remain in the parent's state.
     expect(onDelete).not.toHaveBeenCalled();
+    // The inline error row should now be visible below the affected item.
     expect(screen.getByText(/failed to delete/i)).toBeInTheDocument();
   });
 });

@@ -10,7 +10,8 @@ function getStatusClass(status) {
   return 'status-in-use';
 }
 
-// `onItemUpdate` bubbles up to InventoryPage so the list reflects edits without a re-fetch.
+// `onItemUpdate` bubbles edited data up; `onDelete` bubbles the deleted id up — both keep
+// the list in sync without a full re-fetch from the server.
 function InventoryRow({ item, isOpen, onToggle, onItemUpdate, onDelete }) {
   // Controls whether the three-dot dropdown is visible.
   const [menuOpen, setMenuOpen] = useState(false);
@@ -105,6 +106,9 @@ function InventoryRow({ item, isOpen, onToggle, onItemUpdate, onDelete }) {
         </td>
       </tr>
 
+      {/* If a delete request fails, show the error as a full-width row directly below
+          the affected item so it's visually connected. colSpan={5} spans all table columns.
+          The dismiss button lets the user clear the message once they've read it. */}
       {deleteError && (
         <tr className="delete-error-row">
           <td colSpan={5} className="delete-error-cell">
@@ -132,6 +136,9 @@ function InventoryRow({ item, isOpen, onToggle, onItemUpdate, onDelete }) {
         />
       )}
 
+      {/* DeleteConfirmModal uses createPortal to render on document.body, so placing it
+          here in the fragment doesn't violate table DOM rules. onError stores the message
+          in local state so it displays as the error row above after the modal closes. */}
       {showDeleteModal && (
         <DeleteConfirmModal
           item={item}
