@@ -4,11 +4,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import InventoryRow from './InventoryRow';
 import ExpandedPanel, { ITEM_FIELDS, FALLBACK } from './ExpandedPanel';
-import { patchInventory } from '../../lib/api';
+import { patchInventory, deleteInventory } from '../../lib/api';
 
-// Replace the real patchInventory with a mock so tests never hit the network.
+// Replace real API calls with mocks so tests never hit the network.
 vi.mock('../../lib/api', () => ({
   patchInventory: vi.fn(),
+  deleteInventory: vi.fn(),
 }));
 
 // ---------------------------------------------------------------------------
@@ -47,6 +48,7 @@ const nullFieldItem = {
 beforeEach(() => {
   // Reset call history between tests so one test's calls don't affect another's assertions.
   patchInventory.mockReset();
+  deleteInventory.mockReset();
   // ExpandedPanel fetches subteams on mount via useSubteams(). We mock the global fetch
   // here to return an empty array so tests don't fail trying to reach a real server.
   global.fetch = vi.fn().mockResolvedValue({
@@ -60,8 +62,8 @@ function renderRow(props) {
   return render(
     <table>
       <tbody>
-        {/* Default onItemUpdate to a no-op so tests that don't care about it don't have to pass it. */}
-        <InventoryRow onItemUpdate={vi.fn()} {...props} />
+        {/* Default callbacks to no-ops so tests that don't care about them don't have to pass them. */}
+        <InventoryRow onItemUpdate={vi.fn()} onDelete={vi.fn()} {...props} />
       </tbody>
     </table>
   );
@@ -318,5 +320,107 @@ describe('ExpandedPanel — edit mode', () => {
     expect(screen.getByText('Required')).toBeInTheDocument();
     // validate() returned false, so patchInventory should never have been called.
     expect(patchInventory).not.toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Delete action
+// ---------------------------------------------------------------------------
+
+describe('InventoryRow — delete action', () => {
+  it('the dropdown renders a Delete option in a distinct warning color alongside Edit', async () => {
+    renderRow({ item: baseItem, isOpen: false, onToggle: vi.fn() });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Row actions' }));
+
+    const deleteBtn = screen.getByRole('menuitem', { name: 'Delete' });
+    expect(deleteBtn).toBeInTheDocument();
+    expect(deleteBtn).toHaveClass('btn-delete');
+  });
+
+  it('clicking Delete opens the confirmation modal without calling onToggle', async () => {
+    const onToggle = vi.fn();
+    renderRow({ item: baseItem, isOpen: false, onToggle });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Row actions' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Delete' }));
+
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(onToggle).not.toHaveBeenCalled();
+  });
+
+  it('Confirm button is disabled when the text input is empty', async () => {
+    renderRow({ item: baseItem, isOpen: false, onToggle: vi.fn() });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Row actions' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Delete' }));
+
+    expect(screen.getByRole('button', { name: 'Confirm' })).toBeDisabled();
+  });
+
+  it('Confirm button is disabled when the input does not exactly match DELETE', async () => {
+    renderRow({ item: baseItem, isOpen: false, onToggle: vi.fn() });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Row actions' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Delete' }));
+
+    await userEvent.type(screen.getByRole('textbox'), 'delete');
+
+    expect(screen.getByRole('button', { name: 'Confirm' })).toBeDisabled();
+  });
+
+  it('Confirm button becomes enabled only when the input matches DELETE exactly', async () => {
+    renderRow({ item: baseItem, isOpen: false, onToggle: vi.fn() });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Row actions' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Delete' }));
+
+    await userEvent.type(screen.getByRole('textbox'), 'DELETE');
+
+    expect(screen.getByRole('button', { name: 'Confirm' })).not.toBeDisabled();
+  });
+
+  it('clicking Cancel closes the modal without calling deleteInventory', async () => {
+    renderRow({ item: baseItem, isOpen: false, onToggle: vi.fn() });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Row actions' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Delete' }));
+
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(deleteInventory).not.toHaveBeenCalled();
+  });
+
+  it('Confirm with DELETE typed calls deleteInventory, removes the item, and closes the modal', async () => {
+    const onDelete = vi.fn();
+    deleteInventory.mockResolvedValueOnce({ message: 'Deleted' });
+    renderRow({ item: baseItem, isOpen: false, onToggle: vi.fn(), onDelete });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Row actions' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Delete' }));
+    await userEvent.type(screen.getByRole('textbox'), 'DELETE');
+    await userEvent.click(screen.getByRole('button', { name: 'Confirm' }));
+
+    await waitFor(() => expect(deleteInventory).toHaveBeenCalledWith(baseItem.id));
+    expect(onDelete).toHaveBeenCalledWith(baseItem.id);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('on request failure, the modal closes, onDelete is not called, and an error is shown', async () => {
+    const onDelete = vi.fn();
+    deleteInventory.mockRejectedValueOnce(new Error('Network error'));
+    renderRow({ item: baseItem, isOpen: false, onToggle: vi.fn(), onDelete });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Row actions' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Delete' }));
+    await userEvent.type(screen.getByRole('textbox'), 'DELETE');
+    await userEvent.click(screen.getByRole('button', { name: 'Confirm' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(onDelete).not.toHaveBeenCalled();
+    expect(screen.getByText(/failed to delete/i)).toBeInTheDocument();
   });
 });
