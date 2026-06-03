@@ -30,9 +30,18 @@ export async function initDb(dbPath = 'db/frc-inventory.db') {
       checkOutBy TEXT,
       lastUpdated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       tags TEXT,
-      notes TEXT
+      notes TEXT,
+      needsRestock INTEGER DEFAULT 0
     )
   `);
+
+  // Migration: add needsRestock to databases created before this column existed.
+  // ALTER TABLE fails if the column already exists, so we swallow that error.
+  try {
+    await db.run('ALTER TABLE inventory ADD COLUMN needsRestock INTEGER DEFAULT 0');
+  } catch {
+    // Column already present — nothing to do.
+  }
 
   console.log('Inventory database is set up and ready to use.');
 

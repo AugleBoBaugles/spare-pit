@@ -67,7 +67,8 @@ test('inventory table has correct columns', async () => {
   expect(columnNames).toEqual(expect.arrayContaining([
     'id', 'name', 'type', 'area', 'location',
     'status', 'quantity', 'condition', 'itemImage',
-    'checkOutBy', 'lastUpdated', 'tags', 'notes'
+    'checkOutBy', 'lastUpdated', 'tags', 'notes',
+    'needsRestock'
   ]));
 
   await db.close();
