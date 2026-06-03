@@ -129,14 +129,32 @@ Click the toggle once to switch modes. The preference is active for the current 
 ### DB Schema
 ```mermaid
 erDiagram
-    INVENTORY 
     INVENTORY {
+        integer id PK
         string name
         string type
+        string area
         string location
         string status
+        integer quantity
+        string condition
+        string itemImage
+        string checkOutBy
+        timestamp lastUpdated
+        string tags
+        string notes
+        integer needsRestock
     }
 ```
+
+### needsRestock field
+
+`needsRestock` is an `INTEGER` column (default `0`) on the `inventory` table. It acts as a boolean flag: `1` means the item is flagged for restock, `0` means it is not.
+
+The flag is toggled via `PATCH /api/inventory/:id` with `{ needsRestock: 1 }` or `{ needsRestock: 0 }`. When a student marks an item as restocked from the Dashboard, the PATCH updates both `needsRestock` and `quantity` in a single request.
+
+`initDb.js` includes an `ALTER TABLE` migration so the column is added to existing databases on next server start — no manual reset needed.
+
 ### Server Architecture
 
 Incoming requests travel through a chain of layers, each with a single responsibility:
