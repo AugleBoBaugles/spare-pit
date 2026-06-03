@@ -60,7 +60,7 @@ Click the row again to collapse it.
 | Status | What it means |
 |---|---|
 | Available | In the pit and ready to use |
-| Checked out | Signed out by a subteam — see "Checked out by" for who has it |
+| Checked out | Signed out by a subteam — see "Last Checked Out By" for who last had it |
 | Maintenance | Out of service, do not use |
 | Missing | Cannot be located — report to a lead if you find it |
 

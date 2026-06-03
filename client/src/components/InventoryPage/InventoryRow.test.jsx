@@ -191,6 +191,40 @@ describe('ExpandedPanel — field rendering', () => {
     const nullCount = ITEM_FIELDS.filter(({ key }) => nullFieldItem[key] == null).length;
     expect(fallbacks).toHaveLength(nullCount);
   });
+
+  it('shows "Last Checked Out By" label for an item with status "available"', () => {
+    renderPanel({ item: { ...baseItem, status: 'available' } });
+
+    expect(screen.getByText('Last Checked Out By')).toBeInTheDocument();
+  });
+
+  it('shows "Last Checked Out By" label for items with maintenance and missing status', () => {
+    const { rerender } = renderPanel({ item: { ...baseItem, status: 'maintenance' } });
+    expect(screen.getByText('Last Checked Out By')).toBeInTheDocument();
+
+    rerender(
+      <table><tbody>
+        <ExpandedPanel item={{ ...baseItem, status: 'missing' }} isEditing={false} onEditingChange={vi.fn()} onItemUpdate={vi.fn()} />
+      </tbody></table>
+    );
+    expect(screen.getByText('Last Checked Out By')).toBeInTheDocument();
+  });
+
+  it('shows "Not specified" when checkOutBy is null', () => {
+    renderPanel({ item: { ...baseItem, checkOutBy: null } });
+
+    // The label is present and the value shows the fallback placeholder.
+    expect(screen.getByText('Last Checked Out By')).toBeInTheDocument();
+    // At least one "Not specified" appears for the null checkOutBy field.
+    expect(screen.getAllByText(FALLBACK).length).toBeGreaterThan(0);
+  });
+
+  it('uses "Checked out by" (not "Last Checked Out By") as the edit-form label', () => {
+    renderPanel({ item: { ...baseItem, status: 'checked-out' }, isEditing: true });
+
+    expect(screen.getByLabelText('Checked out by')).toBeInTheDocument();
+    expect(screen.queryByText('Last Checked Out By')).not.toBeInTheDocument();
+  });
 });
 
 // ---------------------------------------------------------------------------
