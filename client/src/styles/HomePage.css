@@ -107,3 +107,39 @@
   background: var(--color-error-bg);
   color: var(--color-error-fg);
 }
+
+/* ── Restock section ── */
+
+.home-restock {
+  margin-top: 2rem;
+}
+
+.restock-item__info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.restock-item__qty {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.restock-item__clear {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  text-align: left;
+}
+
+.restock-item__clear:hover {
+  background: none;
+  color: var(--color-text-secondary);
+  text-decoration: underline;
+}
