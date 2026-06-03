@@ -78,6 +78,8 @@ function ExpandedPanel({ item, isEditing, onEditingChange, onItemUpdate }) {
   const [errors, setErrors] = useState({});
   // `saveError` holds a message to show when the PATCH request itself fails.
   const [saveError, setSaveError] = useState(null);
+  // `restockError` holds a message to show when the restock toggle PATCH fails.
+  const [restockError, setRestockError] = useState(null);
 
   // Every time the user opens edit mode, reset the form to the current item values.
   useEffect(() => {
@@ -136,6 +138,18 @@ function ExpandedPanel({ item, isEditing, onEditingChange, onItemUpdate }) {
     setErrors({});
     setSaveError(null);
     onEditingChange(false);
+  }
+
+  // Toggle the needsRestock flag without entering edit mode.
+  async function handleRestockToggle() {
+    setRestockError(null);
+    const newValue = item.needsRestock ? 0 : 1;
+    try {
+      const updated = await patchInventory(item.id, { needsRestock: newValue });
+      onItemUpdate(updated);
+    } catch (err) {
+      setRestockError(err.message);
+    }
   }
 
   // ── Edit mode ──────────────────────────────────────────────────────────────
@@ -234,6 +248,24 @@ function ExpandedPanel({ item, isEditing, onEditingChange, onItemUpdate }) {
               </div>
             );
           })}
+        </div>
+
+        {/* Restock toggle — visible in read mode without entering edit mode. */}
+        <div className="expanded-panel__restock">
+          <button
+            role="switch"
+            aria-checked={!!item.needsRestock}
+            className={`restock-toggle${item.needsRestock ? ' restock-toggle--on' : ''}`}
+            onClick={handleRestockToggle}
+          >
+            <span className="restock-toggle__track">
+              <span className="restock-toggle__thumb" />
+            </span>
+            Needs Restock
+          </button>
+          {restockError && (
+            <span className="expanded-panel__restock-error">{restockError}</span>
+          )}
         </div>
       </td>
     </tr>

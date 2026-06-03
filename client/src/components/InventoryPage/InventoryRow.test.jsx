@@ -30,6 +30,7 @@ const baseItem = {
   tags: 'power,drilling',
   notes: 'Includes 2 battery packs',
   itemImage: 'images/cordless-drill.jpg',
+  needsRestock: 0,
 };
 
 // Same item but with all optional fields set to null, used to test the fallback display.
@@ -417,7 +418,7 @@ describe('InventoryRow — delete action', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  it('on request failure, the modal closes, onDelete is not called, and an error is shown', async () => {
+  it('on request failure the modal closes, onDelete is not called, and an error is shown', async () => {
     const onDelete = vi.fn();
     deleteInventory.mockRejectedValueOnce(new Error('Network error'));
     renderRow({ item: baseItem, isOpen: false, onToggle: vi.fn(), onDelete });
@@ -433,5 +434,65 @@ describe('InventoryRow — delete action', () => {
     expect(onDelete).not.toHaveBeenCalled();
     // The inline error row should now be visible below the affected item.
     expect(screen.getByText(/failed to delete/i)).toBeInTheDocument();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// ExpandedPanel — Needs Restock toggle
+// ---------------------------------------------------------------------------
+
+describe('ExpandedPanel — Needs Restock toggle', () => {
+  it('renders a "Needs Restock" switch in read mode', () => {
+    renderPanel({ item: { ...baseItem, needsRestock: 0 } });
+
+    expect(screen.getByRole('switch', { name: 'Needs Restock' })).toBeInTheDocument();
+  });
+
+  it('switch is unchecked (aria-checked=false) when needsRestock is 0', () => {
+    renderPanel({ item: { ...baseItem, needsRestock: 0 } });
+
+    expect(screen.getByRole('switch', { name: 'Needs Restock' })).toHaveAttribute('aria-checked', 'false');
+  });
+
+  it('switch is checked (aria-checked=true) when needsRestock is 1', () => {
+    renderPanel({ item: { ...baseItem, needsRestock: 1 } });
+
+    expect(screen.getByRole('switch', { name: 'Needs Restock' })).toHaveAttribute('aria-checked', 'true');
+  });
+
+  it('clicking the switch calls patchInventory with needsRestock: 1 when currently 0', async () => {
+    const onItemUpdate = vi.fn();
+    const updatedItem = { ...baseItem, needsRestock: 1 };
+    patchInventory.mockResolvedValueOnce(updatedItem);
+
+    renderPanel({ item: { ...baseItem, needsRestock: 0 }, onItemUpdate });
+
+    await userEvent.click(screen.getByRole('switch', { name: 'Needs Restock' }));
+
+    await waitFor(() => expect(patchInventory).toHaveBeenCalledWith(baseItem.id, { needsRestock: 1 }));
+    expect(onItemUpdate).toHaveBeenCalledWith(updatedItem);
+  });
+
+  it('clicking the switch calls patchInventory with needsRestock: 0 when currently 1', async () => {
+    const onItemUpdate = vi.fn();
+    const updatedItem = { ...baseItem, needsRestock: 0 };
+    patchInventory.mockResolvedValueOnce(updatedItem);
+
+    renderPanel({ item: { ...baseItem, needsRestock: 1 }, onItemUpdate });
+
+    await userEvent.click(screen.getByRole('switch', { name: 'Needs Restock' }));
+
+    await waitFor(() => expect(patchInventory).toHaveBeenCalledWith(baseItem.id, { needsRestock: 0 }));
+    expect(onItemUpdate).toHaveBeenCalledWith(updatedItem);
+  });
+
+  it('shows an error message when the PATCH fails', async () => {
+    patchInventory.mockRejectedValueOnce(new Error('Network error'));
+
+    renderPanel({ item: { ...baseItem, needsRestock: 0 } });
+
+    await userEvent.click(screen.getByRole('switch', { name: 'Needs Restock' }));
+
+    await waitFor(() => expect(screen.getByText('Network error')).toBeInTheDocument());
   });
 });
