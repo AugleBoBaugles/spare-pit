@@ -71,21 +71,19 @@ function HomePage() {
           <ul className="attention-list">
             {restock.map(item => (
               <li key={item.id} className="attention-item">
-                <div className="restock-item__info">
-                  <span className="attention-item__name">{item.name}</span>
-                  <button
-                    className="restock-item__clear"
-                    onClick={() => handleRestockToggle(item)}
-                  >
-                    Mark as restocked
-                  </button>
-                </div>
+                <span className="attention-item__name">{item.name}</span>
                 {item.quantity != null && (
                   <span className="restock-item__qty">Qty: {item.quantity}</span>
                 )}
                 {item.location && (
                   <span className="attention-item__loc">{item.location}</span>
                 )}
+                <button
+                  className="restock-item__clear"
+                  onClick={() => handleRestockToggle(item)}
+                >
+                  Mark as restocked
+                </button>
               </li>
             ))}
           </ul>
