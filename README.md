@@ -76,6 +76,25 @@ Click the row again to collapse it.
 
 If something goes wrong when saving, an error message will appear below the form. Your edits are preserved so you can try again.
 
+### Flagging Items as Needs Restock
+
+Use this when you notice that an item is running low and needs to be ordered.
+
+#### Flagging an item
+
+1. Find the item in the inventory list and click its row to expand it.
+2. At the bottom of the expanded panel, click the **Needs Restock** toggle. The switch slides right to show the item is flagged.
+3. To clear the flag from the expanded panel, click the toggle again — the switch slides back left.
+
+#### Ordering from the Dashboard
+
+1. Go to the **Dashboard**. Flagged items appear in the **Needs restock** section, showing each item's name, quantity, and location.
+2. When you have ordered an item, click **Mark as restocked** next to it.
+3. A quantity field will appear, pre-filled with the current quantity. Update it to reflect how many are now in the inventory, then click **Save**.
+4. The item is removed from the restock list and its quantity is updated.
+
+> **Note:** The Needs Restock flag is independent of an item's status — you can flag any item regardless of whether it is available, checked out, or otherwise.
+
 ### Deleting an Item
 
 Use this when a tool should be permanently removed from the inventory — for example, when it has been retired from the team's kit or when a duplicate entry needs to be cleaned up.
