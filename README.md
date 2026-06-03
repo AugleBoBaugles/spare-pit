@@ -41,6 +41,7 @@ start.bat
 **Contents**
 
 1. [Viewing and Editing Inventory](#viewing-and-editing-inventory)
+1. [Flagging Items as Needs Restock](#flagging-items-as-needs-restock)
 1. [Deleting an Item](#deleting-an-item)
 1. [Dark Mode](#dark-mode)
 1. [Troubleshooting](#troubleshooting)

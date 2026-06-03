@@ -120,7 +120,7 @@ describe('HomePage — Needs restock section', () => {
 // Needs restock — dashboard toggle
 // ---------------------------------------------------------------------------
 
-describe('HomePage — restock list toggle', () => {
+describe('HomePage — restock inline form', () => {
   it('renders a "Mark as restocked" button for each flagged item', () => {
     mockInventory([
       { ...baseItem, id: 1, name: 'Cordless Drill', needsRestock: 1 },
@@ -128,30 +128,67 @@ describe('HomePage — restock list toggle', () => {
     ])
     render(<HomePage />)
 
-    const buttons = screen.getAllByRole('button', { name: 'Mark as restocked' })
-    expect(buttons).toHaveLength(2)
+    expect(screen.getAllByRole('button', { name: 'Mark as restocked' })).toHaveLength(2)
   })
 
-  it('clicking "Mark as restocked" calls patchInventory with needsRestock: 0', async () => {
-    const clearedItem = { ...baseItem, needsRestock: 0 }
-    patchInventory.mockResolvedValueOnce(clearedItem)
-    mockInventory([{ ...baseItem, needsRestock: 1 }])
+  it('clicking "Mark as restocked" shows a quantity input pre-filled with the current quantity', async () => {
+    mockInventory([{ ...baseItem, needsRestock: 1, quantity: 5 }])
     render(<HomePage />)
 
     await userEvent.click(screen.getByRole('button', { name: 'Mark as restocked' }))
 
+    expect(screen.getByRole('spinbutton')).toHaveValue(5)
+  })
+
+  it('clicking Cancel hides the form without calling patchInventory', async () => {
+    mockInventory([{ ...baseItem, needsRestock: 1 }])
+    render(<HomePage />)
+
+    await userEvent.click(screen.getByRole('button', { name: 'Mark as restocked' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+
+    expect(screen.getByRole('button', { name: 'Mark as restocked' })).toBeInTheDocument()
+    expect(patchInventory).not.toHaveBeenCalled()
+  })
+
+  it('clicking Save calls patchInventory with needsRestock: 0 and the current quantity', async () => {
+    const clearedItem = { ...baseItem, needsRestock: 0, quantity: 2 }
+    patchInventory.mockResolvedValueOnce(clearedItem)
+    mockInventory([{ ...baseItem, needsRestock: 1, quantity: 2 }])
+    render(<HomePage />)
+
+    await userEvent.click(screen.getByRole('button', { name: 'Mark as restocked' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+
     await waitFor(() =>
-      expect(patchInventory).toHaveBeenCalledWith(baseItem.id, { needsRestock: 0 })
+      expect(patchInventory).toHaveBeenCalledWith(baseItem.id, { needsRestock: 0, quantity: 2 })
     )
   })
 
-  it('clicking "Mark as restocked" calls updateItem with the server response', async () => {
-    const clearedItem = { ...baseItem, needsRestock: 0 }
+  it('clicking Save with a changed quantity sends the new value', async () => {
+    const clearedItem = { ...baseItem, needsRestock: 0, quantity: 10 }
     patchInventory.mockResolvedValueOnce(clearedItem)
-    mockInventory([{ ...baseItem, needsRestock: 1 }])
+    mockInventory([{ ...baseItem, needsRestock: 1, quantity: 2 }])
     render(<HomePage />)
 
     await userEvent.click(screen.getByRole('button', { name: 'Mark as restocked' }))
+    await userEvent.clear(screen.getByRole('spinbutton'))
+    await userEvent.type(screen.getByRole('spinbutton'), '10')
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+    await waitFor(() =>
+      expect(patchInventory).toHaveBeenCalledWith(baseItem.id, { needsRestock: 0, quantity: 10 })
+    )
+  })
+
+  it('clicking Save calls updateItem with the server response', async () => {
+    const clearedItem = { ...baseItem, needsRestock: 0, quantity: 2 }
+    patchInventory.mockResolvedValueOnce(clearedItem)
+    mockInventory([{ ...baseItem, needsRestock: 1, quantity: 2 }])
+    render(<HomePage />)
+
+    await userEvent.click(screen.getByRole('button', { name: 'Mark as restocked' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
 
     await waitFor(() => expect(mockUpdateItem).toHaveBeenCalledWith(clearedItem))
   })

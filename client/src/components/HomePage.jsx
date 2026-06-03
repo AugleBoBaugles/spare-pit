@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useInventory } from '../utils/useInventory'
 import { patchInventory } from '../lib/api'
 import '../styles/HomePage.css'
@@ -10,10 +11,22 @@ function HomePage() {
   const attention = data.filter(i => i.status === 'maintenance' || i.status === 'missing')
   const restock = data.filter(i => i.needsRestock)
 
-  async function handleRestockToggle(item) {
+  const [restockingId, setRestockingId] = useState(null)
+  const [restockQty, setRestockQty] = useState('')
+
+  function handleRestockOpen(item) {
+    setRestockingId(item.id)
+    setRestockQty(item.quantity ?? '')
+  }
+
+  async function handleRestockConfirm(item) {
     try {
-      const updated = await patchInventory(item.id, { needsRestock: 0 });
-      updateItem(updated);
+      const updated = await patchInventory(item.id, {
+        needsRestock: 0,
+        quantity: restockQty !== '' ? Number(restockQty) : item.quantity,
+      })
+      updateItem(updated)
+      setRestockingId(null)
     } catch {
       // silently ignore — the item stays in the list and the user can try again
     }
@@ -78,12 +91,27 @@ function HomePage() {
                 {item.location && (
                   <span className="attention-item__loc">{item.location}</span>
                 )}
-                <button
-                  className="restock-item__clear"
-                  onClick={() => handleRestockToggle(item)}
-                >
-                  Mark as restocked
-                </button>
+                {restockingId === item.id ? (
+                  <div className="restock-item__form">
+                    <input
+                      type="number"
+                      min={0}
+                      className="restock-item__qty-input"
+                      value={restockQty}
+                      onChange={e => setRestockQty(e.target.value)}
+                      autoFocus
+                    />
+                    <button onClick={() => handleRestockConfirm(item)}>Save</button>
+                    <button onClick={() => setRestockingId(null)}>Cancel</button>
+                  </div>
+                ) : (
+                  <button
+                    className="restock-item__clear"
+                    onClick={() => handleRestockOpen(item)}
+                  >
+                    Mark as restocked
+                  </button>
+                )}
               </li>
             ))}
           </ul>
