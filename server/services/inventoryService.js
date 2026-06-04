@@ -16,7 +16,7 @@ import {
 // lastUpdated is always set by the service layer to the current timestamp.
 export const patchableColumns = [
   'name', 'type', 'area', 'location', 'status',
-  'quantity', 'condition', 'itemImage', 'checkOutBy', 'tags', 'notes'
+  'quantity', 'condition', 'itemImage', 'checkOutBy', 'tags', 'notes', 'needsRestock'
 ];
 
 // Returns all inventory items.

@@ -54,19 +54,20 @@ export async function insertInventoryItem(item) {
   const db = await getDb();
   const result = await db.run(
     `INSERT INTO inventory
-        (name, type, area, location, status, quantity, condition, itemImage, checkOutBy, tags, notes)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        (name, type, area, location, status, quantity, condition, itemImage, checkOutBy, tags, notes, needsRestock)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     item.name,
-    item.type ?? null,
-    item.area ?? null,
-    item.location ?? null,
-    item.status ?? null,
-    item.quantity ?? null,
-    item.condition ?? null,
-    item.itemImage ?? null,
-    item.checkOutBy ?? null,
-    item.tags ?? null,
-    item.notes ?? null
+    item.type         ?? null,
+    item.area         ?? null,
+    item.location     ?? null,
+    item.status       ?? null,
+    item.quantity     ?? null,
+    item.condition    ?? null,
+    item.itemImage    ?? null,
+    item.checkOutBy   ?? null,
+    item.tags         ?? null,
+    item.notes        ?? null,
+    item.needsRestock ?? 0
   );
   return db.get('SELECT * FROM inventory WHERE id = ?', result.lastID);
 }

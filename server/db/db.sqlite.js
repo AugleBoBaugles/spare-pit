@@ -32,7 +32,8 @@ export async function getDb() {
         checkOutBy TEXT,
         lastUpdated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         tags TEXT,
-        notes TEXT
+        notes TEXT,
+        needsRestock INTEGER DEFAULT 0
       )
     `);
 

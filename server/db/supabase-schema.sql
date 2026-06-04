@@ -19,7 +19,8 @@ create table public.inventory (
   condition     text,
   "itemImage"   text,
   "checkOutBy"  text,
-  "lastUpdated" timestamptz default now(),
-  tags          text,
-  notes         text
+  "lastUpdated"   timestamptz default now(),
+  tags            text,
+  notes           text,
+  "needsRestock"  integer     default 0
 );

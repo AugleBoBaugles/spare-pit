@@ -8,7 +8,7 @@
 import { getDb } from '../db/db.js';
 
 // Columns whose names must be double-quoted in SQL to preserve camelCase casing.
-const QUOTED_COLS = new Set(['itemImage', 'checkOutBy', 'lastUpdated']);
+const QUOTED_COLS = new Set(['itemImage', 'checkOutBy', 'lastUpdated', 'needsRestock']);
 
 function col(name) {
   return QUOTED_COLS.has(name) ? `"${name}"` : name;
@@ -51,22 +51,23 @@ export async function insertInventoryItem(item) {
   const db = getDb();
   const { rows } = await db.query(
     `INSERT INTO inventory
-       (name, type, area, location, status, quantity, condition, "itemImage", "checkOutBy", "lastUpdated", tags, notes)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+       (name, type, area, location, status, quantity, condition, "itemImage", "checkOutBy", "lastUpdated", tags, notes, "needsRestock")
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
      RETURNING *`,
     [
       item.name,
-      item.type        ?? null,
-      item.area        ?? null,
-      item.location    ?? null,
-      item.status      ?? null,
-      item.quantity    ?? null,
-      item.condition   ?? null,
-      item.itemImage   ?? null,
-      item.checkOutBy  ?? null,
+      item.type         ?? null,
+      item.area         ?? null,
+      item.location     ?? null,
+      item.status       ?? null,
+      item.quantity     ?? null,
+      item.condition    ?? null,
+      item.itemImage    ?? null,
+      item.checkOutBy   ?? null,
       normalizeTimestamp(item.lastUpdated),
-      item.tags        ?? null,
-      item.notes       ?? null,
+      item.tags         ?? null,
+      item.notes        ?? null,
+      item.needsRestock ?? 0,
     ]
   );
   return rows[0];
