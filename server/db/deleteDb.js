@@ -1,12 +1,9 @@
 import { getDb } from './db.js';
 
+// Deletes all rows from the Supabase inventory table (the schema itself is preserved).
+// Intended for testing and development resets — use with caution in production.
 export async function deleteDb() {
   const db = getDb();
-  const { error } = await db.from('inventory').delete().neq('id', 0);
-
-  if (error) {
-    throw error;
-  }
-
+  await db.query('DELETE FROM inventory');
   console.log('Supabase inventory table cleared.');
 }

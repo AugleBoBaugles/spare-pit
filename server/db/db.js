@@ -1,28 +1,29 @@
+// Primary database connection — PostgreSQL via the Supabase Transaction Pooler.
+// Uses the pg driver with a single shared Pool, lazily created on first call.
+// To run locally without Supabase, see db.sqlite.js and README → "Local SQLite Development".
 import dotenv from 'dotenv';
-import { createClient } from '@supabase/supabase-js';
+import pg from 'pg';
 
 dotenv.config();
 
-let supabase;
+const { Pool } = pg;
+let pool;
 
 export function getDb() {
-  if (!supabase) {
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!pool) {
+    const connectionString = process.env.DATABASE_URL;
 
-    if (!supabaseUrl || !supabaseKey) {
+    if (!connectionString) {
       throw new Error(
-        'Missing required environment variables: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must both be set.\n' +
-        'Copy server/.env.example to server/.env and fill in your Supabase project credentials.\n' +
-        'See the README → "Database Setup" for full instructions.\n' +
+        'Missing required environment variable: DATABASE_URL must be set.\n' +
+        'Copy server/.env.example to server/.env and fill in your Supabase Transaction Pooler connection string.\n' +
+        'Find it at: Supabase dashboard → Settings → Database → Connection string → Transaction pooler.\n' +
         'To run locally without Supabase, see README → "Local SQLite Development".'
       );
     }
 
-    supabase = createClient(supabaseUrl, supabaseKey, {
-      auth: { persistSession: false }
-    });
+    pool = new Pool({ connectionString, ssl: { rejectUnauthorized: false } });
   }
 
-  return supabase;
+  return pool;
 }
