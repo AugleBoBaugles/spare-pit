@@ -1,40 +1,18 @@
-import fs from 'fs';
-import sqlite3 from 'sqlite3';
-import { open } from 'sqlite';
+import { getDb } from './db.js';
 
-export async function initDb(dbPath = 'db/frc-inventory.db') {
-  const dbExists = fs.existsSync(dbPath);
+export async function initDb() {
+  const db = getDb();
+  const { error } = await db.from('inventory').select('id').limit(1);
 
-  const db = await open({
-    filename: dbPath,
-    driver: sqlite3.Database
-  });
-
-  if (!dbExists) {
-    console.log('New database created.');
-  } else {
-    console.log('Database already exists.');
+  if (error) {
+    console.error('Unable to verify inventory table:', error.message);
+    throw new Error(
+      'Supabase inventory table is unavailable. ' +
+      'Create the table by running server/db/supabase-schema.sql in the Supabase SQL editor, ' +
+      'then restart the server.'
+    );
   }
 
-  await db.exec(`
-    CREATE TABLE IF NOT EXISTS inventory (
-      id INTEGER PRIMARY KEY,
-      name TEXT NOT NULL,
-      type TEXT,
-      area TEXT,
-      location TEXT,
-      status TEXT,
-      quantity INTEGER,
-      condition TEXT,
-      itemImage TEXT,
-      checkOutBy TEXT,
-      lastUpdated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      tags TEXT,
-      notes TEXT
-    )
-  `);
-
-  console.log('Inventory database is set up and ready to use.');
-
+  console.log('Supabase inventory table verified.');
   return db;
 }

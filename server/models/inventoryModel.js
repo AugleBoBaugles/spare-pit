@@ -1,101 +1,112 @@
+// Supabase data access layer. All direct database queries live here.
+// To switch to local SQLite, see inventoryModel.sqlite.js and README → "Local SQLite Development".
 import { getDb } from '../db/db.js';
 
-/*
- * Retrieves all inventory items from the database. Each item includes all fields defined in the inventory schema.
- * Returns an array of inventory items.
- */
+// Converts a lastUpdated value to an ISO 8601 string required by Supabase's timestamptz column.
+// Accepts a Unix ms timestamp (Date.now()), an existing ISO string, or null.
+function normalizeTimestamp(value) {
+  if (value === undefined || value === null) return null;
+  return typeof value === 'string' ? value : new Date(value).toISOString();
+}
+
+// Returns every row in the inventory table, sorted by id ascending.
 export async function getAllInventory() {
-    const db = await getDb();
-
-    return db.all('SELECT * FROM inventory');
+  const db = getDb();
+  const { data, error } = await db.from('inventory').select('*').order('id', { ascending: true });
+  if (error) throw error;
+  return data ?? [];
 }
 
-/*
- * Finds an inventory item by its name. Used to check for possible duplicates when adding new items.
- * Returns the inventory item if found, or undefined if no match is found.
- */
+// Case-insensitive name lookup used for duplicate detection on insert.
+// Returns the first matching row, or null if none found.
 export async function findInventoryByName(name) {
-    const db = await getDb();
-    return db.get('SELECT * FROM inventory WHERE LOWER(name) = LOWER(?)', name);
+  const db = getDb();
+  const { data, error } = await db
+    .from('inventory')
+    .select('*')
+    .ilike('name', name)
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data ?? null;
 }
 
-/*
- * Returns the list of column names for the inventory table, derived directly from the schema.
- * Used by the service layer to validate incoming fields against the current table structure.
- */
-export async function getInventoryColumns() {
-    const db = await getDb();
-    const rows = await db.all('PRAGMA table_info(inventory)');
-    return rows.map(row => row.name);
-}
-
-/*
- * Updates an inventory item by its ID with the provided fields.
- * Returns the updated item.
- */
+// Overwrites the given fields on a single row identified by id.
+// Returns the full updated row as stored in Supabase.
 export async function updateInventoryItem(id, fields) {
-    const db = await getDb();
-    const entries = Object.entries(fields);
-    const setClauses = entries.map(([col]) => `${col} = ?`).join(', ');
-    const values = entries.map(([, val]) => val);
-    await db.run(
-        `UPDATE inventory SET ${setClauses} WHERE id = ?`,
-        ...values,
-        id
-    );
-    return db.get('SELECT * FROM inventory WHERE id = ?', id);
+  const db = getDb();
+  const normalizedFields = {
+    ...fields,
+    lastUpdated: normalizeTimestamp(fields.lastUpdated)
+  };
+
+  const { data, error } = await db
+    .from('inventory')
+    .update(normalizedFields)
+    .eq('id', id)
+    .select('*')
+    .single();
+
+  if (error) throw error;
+  return data;
 }
 
-// Returns all distinct non-empty checkOutBy values in the database.
+// Returns an array of unique, non-empty checkOutBy values across all rows.
+// Used to populate the subteams dropdown in the UI.
 export async function getDistinctSubteams() {
-    const db = await getDb();
-    const rows = await db.all(
-        `SELECT DISTINCT checkOutBy FROM inventory WHERE checkOutBy IS NOT NULL AND checkOutBy != '' ORDER BY checkOutBy`
-    );
-    return rows.map(r => r.checkOutBy);
+  const db = getDb();
+  const { data, error } = await db
+    .from('inventory')
+    .select('checkOutBy')
+    .neq('checkOutBy', '')
+    .not('checkOutBy', 'is', null)
+    .order('checkOutBy', { ascending: true });
+
+  if (error) throw error;
+  const values = data?.map(row => row.checkOutBy) ?? [];
+  return Array.from(new Set(values));
 }
 
-/*
- * Inserts a new inventory item into the database.
- * Returns the inserted item.
- */
+// Inserts a new inventory item and returns the created row (including the generated id).
 export async function insertInventoryItem(item) {
-    const db = await getDb();
-    const result = await db.run(
-        `INSERT INTO inventory 
-            (name, type, area, location, status, quantity, condition, itemImage, checkOutBy, tags, notes)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        item.name,
-        item.type ?? null,
-        item.area ?? null,
-        item.location ?? null,
-        item.status ?? null,
-        item.quantity ?? null,
-        item.condition ?? null,
-        item.itemImage ?? null,
-        item.checkOutBy ?? null,
-        item.tags ?? null,
-        item.notes ?? null
-    );
-    return db.get('SELECT * FROM inventory WHERE id = ?', result.lastID);
+  const db = getDb();
+  const insertPayload = {
+    ...item,
+    lastUpdated: normalizeTimestamp(item.lastUpdated)
+  };
+
+  const { data, error } = await db
+    .from('inventory')
+    .insert(insertPayload)
+    .select('*')
+    .single();
+
+  if (error) throw error;
+  return data;
 }
 
-/*
- * Finds an inventory item by its ID. Used for operations like deletion or updates.
- * Returns the inventory item if found, or null if no match is found.
- */
+// Fetches a single row by primary key. Returns null if the id does not exist.
 export const findInventoryById = async (id) => {
-    const db = await getDb();
+  const db = getDb();
+  const { data, error } = await db
+    .from('inventory')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle();
 
-    const result = await db.get('SELECT * FROM inventory WHERE id = ?', [id]);
-    return result ?? null;
+  if (error) throw error;
+  return data ?? null;
 };
 
-/*
- * Deletes an inventory item from the database by its ID.
- * Returns the result of the delete operation.
- */
+// Deletes the row with the given id. Returns true on success.
 export const deleteInventoryById = async (id) => {
-    const db = await getDb();
-    return db.run('DELETE FROM inventory WHERE id = ?', [id]);
+  const db = getDb();
+  const { error } = await db
+    .from('inventory')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
+  return true;
 };
