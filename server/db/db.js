@@ -14,12 +14,14 @@ export function getDb() {
     const connectionString = process.env.DATABASE_URL;
 
     if (!connectionString) {
-      throw new Error(
-        'Missing required environment variable: DATABASE_URL must be set.\n' +
-        'Copy server/.env.example to server/.env and fill in your Supabase Transaction Pooler connection string.\n' +
-        'Find it at: Supabase dashboard → Settings → Database → Connection string → Transaction pooler.\n' +
+      const err = new Error(
+        'Missing required environment variable: DATABASE_URL must be set. ' +
+        'Copy server/.env.example to server/.env and fill in your Supabase Transaction Pooler connection string. ' +
+        'Find it at: Supabase dashboard → Settings → Database → Connection string → Transaction pooler. ' +
         'To run locally without Supabase, see README → "Local SQLite Development".'
       );
+      err.code = 'MISSING_DB_CONFIG';
+      throw err;
     }
 
     pool = new Pool({ connectionString, ssl: { rejectUnauthorized: false } });
