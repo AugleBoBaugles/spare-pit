@@ -109,3 +109,13 @@ export const deleteInventoryById = async (id) => {
   await db.query('DELETE FROM inventory WHERE id = $1', [id]);
   return true;
 };
+
+// Returns the raw tags strings from every item that has a non-empty tags column.
+// Parsing (split, trim, deduplicate, sort) is left to the service layer.
+export async function getAllTagStrings() {
+  const db = getDb();
+  const { rows } = await db.query(
+    `SELECT tags FROM inventory WHERE tags IS NOT NULL AND tags != ''`
+  );
+  return rows.map(r => r.tags);
+}

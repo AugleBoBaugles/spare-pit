@@ -14,11 +14,16 @@ function AddItemPage({ onNavigate }) {
   const [submitting, setSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
   const [subteams, setSubteams] = useState([]);
+  const [tagSuggestions, setTagSuggestions] = useState([]);
 
   useEffect(() => {
     fetch("/api/inventory/subteams")
       .then(r => r.json())
       .then(setSubteams)
+      .catch(() => {});
+    fetch("/api/inventory/tags")
+      .then(r => r.json())
+      .then(setTagSuggestions)
       .catch(() => {});
   }, []);
 
@@ -29,6 +34,10 @@ function AddItemPage({ onNavigate }) {
     if (!form.status)                              next.status   = "Status is required.";
     if (!form.location.trim())                     next.location = "Location is required.";
     if (form.quantity === "" || form.quantity === null) next.quantity = "Quantity is required.";
+    // Tags are optional, but if provided every comma-separated token must be non-empty.
+    if (form.tags.trim() && form.tags.split(',').some(t => t.trim() === '')) {
+      next.tags = 'Tags must be comma-separated words with no empty segments (e.g. "motor, battery").';
+    }
     return next;
   }
 
@@ -220,10 +229,16 @@ function AddItemPage({ onNavigate }) {
           <label htmlFor="tags">Tags</label>
           <input
             id="tags" name="tags" type="text"
+            list="tag-options"
             value={form.tags} onChange={handleChange}
             placeholder="e.g. power, drilling, electronics"
+            aria-invalid={!!errors.tags}
           />
+          <datalist id="tag-options">
+            {tagSuggestions.map(t => <option key={t} value={t} />)}
+          </datalist>
           <span className="hint">Comma-separated keywords for filtering.</span>
+          {errors.tags && <span className="field-error">{errors.tags}</span>}
         </div>
 
         <div className="field">

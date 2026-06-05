@@ -1,4 +1,17 @@
-import { getAllInventoryService, postInventoryService, getSubteamsService, patchableColumns, patchInventoryService, deleteInventoryService } from "../services/inventoryService.js";
+import { getAllInventoryService, postInventoryService, getSubteamsService, patchableColumns, patchInventoryService, deleteInventoryService, getTagsService } from "../services/inventoryService.js";
+
+/*
+ * GET /inventory/tags - Return a deduplicated, sorted list of all tag strings in the database
+ */
+export const getTags = async (req, res) => {
+    try {
+        const tags = await getTagsService();
+        res.status(200).json(tags);
+    } catch (err) {
+        console.error('Error fetching tags:', err);
+        res.status(500).json({ error: 'Failed to retrieve tags' });
+    }
+};
 
 // Returns true and sends a 503 response when DATABASE_URL is not configured.
 // Call at the top of every catch block so misconfiguration surfaces clearly to the frontend.

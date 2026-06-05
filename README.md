@@ -98,6 +98,8 @@ start.bat
 **Contents**
 
 1. [Viewing and Editing Inventory](#viewing-and-editing-inventory)
+1. [Filtering by Tags](#filtering-by-tags)
+1. [Flagging Items as Needs Restock](#flagging-items-as-needs-restock)
 1. [Deleting an Item](#deleting-an-item)
 1. [Dark Mode](#dark-mode)
 1. [Troubleshooting](#troubleshooting)
@@ -117,7 +119,7 @@ Click the row again to collapse it.
 | Status | What it means |
 |---|---|
 | Available | In the pit and ready to use |
-| Checked out | Signed out by a subteam — see "Checked out by" for who has it |
+| Checked out | Signed out by a subteam — see "Last Checked Out By" for who last had it |
 | Maintenance | Out of service, do not use |
 | Missing | Cannot be located — report to a lead if you find it |
 
@@ -131,6 +133,50 @@ Click the row again to collapse it.
 6. Click **Save** to apply your changes, or **Cancel** to discard them and go back to the read view.
 
 If something goes wrong when saving, an error message will appear below the form. Your edits are preserved so you can try again.
+
+### Filtering by Tags
+
+Tags are short keywords attached to inventory items (e.g. `motor`, `battery`, `power`) that let you quickly narrow the list to a category of items.
+
+#### Using the tag filter
+
+1. On the inventory page, click the **Filter by tags** button to the right of the search bar.
+2. A panel opens showing every tag currently in the database as clickable chips.
+3. Click a chip to select it — the inventory table immediately updates to show only items that have that tag.
+4. Click additional chips to tighten the filter. **All selected tags must be present** on an item for it to appear (AND logic). For example, selecting `motor` and `battery` shows only items tagged with both.
+5. Click an active chip again to deselect it and widen the results.
+6. Click outside the panel to close it.
+
+When one or more tags are active the button label shows the count, e.g. **Filter by tags (2)**, so you can see what's active without reopening the panel.
+
+The tag filter and the search bar work together — text search narrows results first, then the tag filter is applied on top.
+
+#### Tag format when adding or editing items
+
+Tags are stored as a comma-separated list in the **Tags** field, e.g. `motor, battery` or `power,drilling`. Rules:
+
+- Each tag is a word or short phrase (letters, numbers, hyphens, spaces).
+- Separate multiple tags with a comma.
+- No empty segments — `motor,` or `motor,,battery` will be rejected with an inline error.
+- Tags are case-insensitive when filtering (`Motor` and `motor` are treated as the same tag).
+### Flagging Items as Needs Restock
+
+Use this when you notice that an item is running low and needs to be ordered.
+
+#### Flagging an item
+
+1. Find the item in the inventory list and click its row to expand it.
+2. At the bottom of the expanded panel, click the **Needs Restock** toggle. The switch slides right to show the item is flagged.
+3. To clear the flag from the expanded panel, click the toggle again — the switch slides back left.
+
+#### Ordering from the Dashboard
+
+1. Go to the **Dashboard**. Flagged items appear in the **Needs restock** section, showing each item's name, quantity, and location.
+2. When you have ordered an item, click **Mark as restocked** next to it.
+3. A quantity field will appear, pre-filled with the current quantity. Update it to reflect how many are now in the inventory, then click **Save**.
+4. The item is removed from the restock list and its quantity is updated.
+
+> **Note:** The Needs Restock flag is independent of an item's status — you can flag any item regardless of whether it is available, checked out, or otherwise.
 
 ### Deleting an Item
 
@@ -219,39 +265,12 @@ The Supabase schema is in [`server/db/supabase-schema.sql`](server/db/supabase-s
 ```mermaid
 erDiagram
     INVENTORY {
-        bigint id PK
-        text name
-        text type
-        text area
-        text location
-        text status
-        integer quantity
-        text condition
-        text itemImage
-        text checkOutBy
-        timestamptz lastUpdated
-        text tags
-        text notes
+        string name
+        string type
+        string location
+        string status
     }
 ```
-
-#### File Map
-
-```
-server/db/
-  db.js              Supabase — pg Pool, reads DATABASE_URL
-  db.sqlite.js       SQLite — self-initializing local connection
-  initDb.js          Supabase — verifies table access at startup
-  initDb.sqlite.js   SQLite — creates table if missing (reference)
-  deleteDb.js        Supabase — clears all rows
-  deleteDb.sqlite.js SQLite — deletes the .db file
-  supabase-schema.sql  Run this in Supabase SQL Editor to create the table
-
-server/models/
-  inventoryModel.js         Supabase — raw SQL via pg
-  inventoryModel.sqlite.js  SQLite — raw SQL via sqlite driver
-```
-
 ### Server Architecture
 
 Incoming requests travel through a chain of layers, each with a single responsibility:
@@ -270,7 +289,7 @@ App -> Routers -> Controllers -> Services -> Models -> DB
 
 **Models** (`models/`) are the only layer that talks to the database directly. They contain the SQL queries and return raw results up to the service.
 
-**DB** (`db/db.js`) creates and caches the database connection (Supabase by default).
+**DB** (`db/db.js`) opens and manages the SQLite database connection.
 
 ### Delete Inventory Item
 

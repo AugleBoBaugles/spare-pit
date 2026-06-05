@@ -16,13 +16,25 @@ function useSubteams() {
   return subteams;
 }
 
+// Fetches the deduplicated tag list for autocomplete suggestions on the tags field.
+function useTags() {
+  const [tags, setTags] = useState([]);
+  useEffect(() => {
+    fetch('/api/inventory/tags')
+      .then((r) => r.json())
+      .then(setTags)
+      .catch(() => {});
+  }, []);
+  return tags;
+}
+
 // Fields shown in READ mode (the collapsed detail view).
 // These are only the extra details — name/type/location/status are already visible in the row.
 const ITEM_FIELDS = [
   { key: 'area',       label: 'Area' },
   { key: 'quantity',   label: 'Quantity' },
   { key: 'condition',  label: 'Condition' },
-  { key: 'checkOutBy', label: 'Checked out by' },
+  { key: 'checkOutBy', label: 'Last Checked Out By' },
   { key: 'tags',       label: 'Tags' },
   { key: 'notes',      label: 'Notes' },
   { key: 'itemImage',  label: 'Image' },
@@ -62,7 +74,7 @@ const EDIT_FIELDS = [
   ]},
   // Only shown when status is "checked-out"
   { key: 'checkOutBy', label: 'Checked out by', datalist: true, showWhen: (f) => f.status === 'checked-out' },
-  { key: 'tags',       label: 'Tags' },
+  { key: 'tags',       label: 'Tags', datalist: true },
   { key: 'notes',      label: 'Notes',          multiline: true },
   { key: 'itemImage',  label: 'Image' },
 ];
@@ -74,10 +86,13 @@ function ExpandedPanel({ item, isEditing, onEditingChange, onItemUpdate }) {
   // `form` holds the current values of every input while the user is editing.
   const [form, setForm] = useState({ ...item });
   const subteams = useSubteams();
+  const tagSuggestions = useTags();
   // `errors` maps field keys to per-field error messages shown below each input.
   const [errors, setErrors] = useState({});
   // `saveError` holds a message to show when the PATCH request itself fails.
   const [saveError, setSaveError] = useState(null);
+  // `restockError` holds a message to show when the restock toggle PATCH fails.
+  const [restockError, setRestockError] = useState(null);
 
   // Every time the user opens edit mode, reset the form to the current item values.
   useEffect(() => {
@@ -103,6 +118,11 @@ function ExpandedPanel({ item, isEditing, onEditingChange, onItemUpdate }) {
       if (required && (!form[key] || String(form[key]).trim() === '')) {
         newErrors[key] = 'Required';
       }
+    }
+    // Tags are optional, but each comma-separated token must be non-empty if provided.
+    const tagsVal = form.tags ?? '';
+    if (tagsVal.trim() && tagsVal.split(',').some(t => t.trim() === '')) {
+      newErrors.tags = 'Use comma-separated words with no empty segments (e.g. "motor, battery").';
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -136,6 +156,18 @@ function ExpandedPanel({ item, isEditing, onEditingChange, onItemUpdate }) {
     setErrors({});
     setSaveError(null);
     onEditingChange(false);
+  }
+
+  // Toggle the needsRestock flag without entering edit mode.
+  async function handleRestockToggle() {
+    setRestockError(null);
+    const newValue = item.needsRestock ? 0 : 1;
+    try {
+      const updated = await patchInventory(item.id, { needsRestock: newValue });
+      onItemUpdate(updated);
+    } catch (err) {
+      setRestockError(err.message);
+    }
   }
 
   // ── Edit mode ──────────────────────────────────────────────────────────────
@@ -187,10 +219,12 @@ function ExpandedPanel({ item, isEditing, onEditingChange, onItemUpdate }) {
                       onChange={(e) => handleChange(key, e.target.value)}
                     />
                     {/* The <datalist> provides autocomplete suggestions without restricting free text.
-                        The browser shows matching options as the user types. */}
+                        Tags and subteams each pull from their own fetched list. */}
                     {datalist && (
                       <datalist id={`edit-${key}-list`}>
-                        {subteams.map((s) => <option key={s} value={s} />)}
+                        {(key === 'tags' ? tagSuggestions : subteams).map((s) => (
+                          <option key={s} value={s} />
+                        ))}
                       </datalist>
                     )}
                   </>
@@ -234,6 +268,24 @@ function ExpandedPanel({ item, isEditing, onEditingChange, onItemUpdate }) {
               </div>
             );
           })}
+        </div>
+
+        {/* Restock toggle — visible in read mode without entering edit mode. */}
+        <div className="expanded-panel__restock">
+          <button
+            role="switch"
+            aria-checked={!!item.needsRestock}
+            className={`restock-toggle${item.needsRestock ? ' restock-toggle--on' : ''}`}
+            onClick={handleRestockToggle}
+          >
+            <span className="restock-toggle__track">
+              <span className="restock-toggle__thumb" />
+            </span>
+            Needs Restock
+          </button>
+          {restockError && (
+            <span className="expanded-panel__restock-error">{restockError}</span>
+          )}
         </div>
       </td>
     </tr>
