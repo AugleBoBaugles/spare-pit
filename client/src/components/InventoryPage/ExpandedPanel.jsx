@@ -16,6 +16,18 @@ function useSubteams() {
   return subteams;
 }
 
+// Fetches the deduplicated tag list for autocomplete suggestions on the tags field.
+function useTags() {
+  const [tags, setTags] = useState([]);
+  useEffect(() => {
+    fetch('/api/inventory/tags')
+      .then((r) => r.json())
+      .then(setTags)
+      .catch(() => {});
+  }, []);
+  return tags;
+}
+
 // Fields shown in READ mode (the collapsed detail view).
 // These are only the extra details — name/type/location/status are already visible in the row.
 const ITEM_FIELDS = [
@@ -62,7 +74,7 @@ const EDIT_FIELDS = [
   ]},
   // Only shown when status is "checked-out"
   { key: 'checkOutBy', label: 'Checked out by', datalist: true, showWhen: (f) => f.status === 'checked-out' },
-  { key: 'tags',       label: 'Tags' },
+  { key: 'tags',       label: 'Tags', datalist: true },
   { key: 'notes',      label: 'Notes',          multiline: true },
   { key: 'itemImage',  label: 'Image' },
 ];
@@ -74,6 +86,7 @@ function ExpandedPanel({ item, isEditing, onEditingChange, onItemUpdate }) {
   // `form` holds the current values of every input while the user is editing.
   const [form, setForm] = useState({ ...item });
   const subteams = useSubteams();
+  const tagSuggestions = useTags();
   // `errors` maps field keys to per-field error messages shown below each input.
   const [errors, setErrors] = useState({});
   // `saveError` holds a message to show when the PATCH request itself fails.
@@ -105,6 +118,11 @@ function ExpandedPanel({ item, isEditing, onEditingChange, onItemUpdate }) {
       if (required && (!form[key] || String(form[key]).trim() === '')) {
         newErrors[key] = 'Required';
       }
+    }
+    // Tags are optional, but each comma-separated token must be non-empty if provided.
+    const tagsVal = form.tags ?? '';
+    if (tagsVal.trim() && tagsVal.split(',').some(t => t.trim() === '')) {
+      newErrors.tags = 'Use comma-separated words with no empty segments (e.g. "motor, battery").';
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -201,10 +219,12 @@ function ExpandedPanel({ item, isEditing, onEditingChange, onItemUpdate }) {
                       onChange={(e) => handleChange(key, e.target.value)}
                     />
                     {/* The <datalist> provides autocomplete suggestions without restricting free text.
-                        The browser shows matching options as the user types. */}
+                        Tags and subteams each pull from their own fetched list. */}
                     {datalist && (
                       <datalist id={`edit-${key}-list`}>
-                        {subteams.map((s) => <option key={s} value={s} />)}
+                        {(key === 'tags' ? tagSuggestions : subteams).map((s) => (
+                          <option key={s} value={s} />
+                        ))}
                       </datalist>
                     )}
                   </>

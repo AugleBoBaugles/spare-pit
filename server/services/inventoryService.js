@@ -1,4 +1,4 @@
-import { getAllInventory, findInventoryByName, insertInventoryItem, getDistinctSubteams, getInventoryColumns, findInventoryById, updateInventoryItem, deleteInventoryById} from '../models/inventoryModel.js';
+import { getAllInventory, findInventoryByName, insertInventoryItem, getDistinctSubteams, getInventoryColumns, findInventoryById, updateInventoryItem, deleteInventoryById, getAllTagStrings } from '../models/inventoryModel.js';
 
 /*
 Returns an array of all inventory items in the database. Each item includes all fields defined in the inventory schema.
@@ -28,6 +28,23 @@ export async function patchInventoryService(id, updates) {
 
 export async function getSubteamsService() {
     return getDistinctSubteams();
+}
+
+/*
+ * Parses every item's tags string, deduplicates across items, and returns
+ * a sorted lowercase array — e.g. ["battery", "motor", "power"].
+ * Normalising to lowercase means "Motor" and "motor" are treated as one tag.
+ */
+export async function getTagsService() {
+    const rawStrings = await getAllTagStrings();
+    const tagSet = new Set();
+    for (const raw of rawStrings) {
+        for (const token of raw.split(',')) {
+            const trimmed = token.trim().toLowerCase();
+            if (trimmed) tagSet.add(trimmed);
+        }
+    }
+    return [...tagSet].sort();
 }
 
 /*
