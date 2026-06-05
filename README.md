@@ -41,6 +41,7 @@ start.bat
 **Contents**
 
 1. [Viewing and Editing Inventory](#viewing-and-editing-inventory)
+1. [Filtering by Tags](#filtering-by-tags)
 1. [Deleting an Item](#deleting-an-item)
 1. [Dark Mode](#dark-mode)
 1. [Troubleshooting](#troubleshooting)
@@ -74,6 +75,32 @@ Click the row again to collapse it.
 6. Click **Save** to apply your changes, or **Cancel** to discard them and go back to the read view.
 
 If something goes wrong when saving, an error message will appear below the form. Your edits are preserved so you can try again.
+
+### Filtering by Tags
+
+Tags are short keywords attached to inventory items (e.g. `motor`, `battery`, `power`) that let you quickly narrow the list to a category of items.
+
+#### Using the tag filter
+
+1. On the inventory page, click the **Filter by tags** button to the right of the search bar.
+2. A panel opens showing every tag currently in the database as clickable chips.
+3. Click a chip to select it — the inventory table immediately updates to show only items that have that tag.
+4. Click additional chips to tighten the filter. **All selected tags must be present** on an item for it to appear (AND logic). For example, selecting `motor` and `battery` shows only items tagged with both.
+5. Click an active chip again to deselect it and widen the results.
+6. Click outside the panel to close it.
+
+When one or more tags are active the button label shows the count, e.g. **Filter by tags (2)**, so you can see what's active without reopening the panel.
+
+The tag filter and the search bar work together — text search narrows results first, then the tag filter is applied on top.
+
+#### Tag format when adding or editing items
+
+Tags are stored as a comma-separated list in the **Tags** field, e.g. `motor, battery` or `power,drilling`. Rules:
+
+- Each tag is a word or short phrase (letters, numbers, hyphens, spaces).
+- Separate multiple tags with a comma.
+- No empty segments — `motor,` or `motor,,battery` will be rejected with an inline error.
+- Tags are case-insensitive when filtering (`Motor` and `motor` are treated as the same tag).
 
 ### Deleting an Item
 
@@ -136,6 +163,37 @@ App -> Routers -> Controllers -> Services -> Models -> DB
 **Models** (`models/`) are the only layer that talks to the database directly. They contain the SQL queries and return raw results up to the service.
 
 **DB** (`db/db.js`) opens and manages the SQLite database connection.
+
+### Tag Filter
+
+#### GET /api/inventory/tags
+
+Returns a deduplicated, sorted, lowercase array of all tag strings currently in the database.
+
+**Success response (200):**
+```json
+["battery", "drilling", "motor", "power"]
+```
+
+**Error response:**
+| Status | Condition |
+|---|---|
+| 500 | Unexpected server error |
+
+**Implementation:** The model layer fetches the raw `tags` column from every row that has a non-null, non-empty value. The service layer splits each value on commas, trims whitespace, lowercases each token, deduplicates with a `Set`, and sorts alphabetically before returning.
+
+#### Tag filter architecture (frontend)
+
+The tag filter runs as a **separate pass** from the text search inside `filterInventory(items, query, activeTags)`:
+
+1. Text search (`query`) is applied first — case-insensitive substring match across name, type, location, status.
+2. Tag filter (`activeTags`) is applied to the result — AND logic, meaning every selected tag must appear in the item's `tags` field (split on comma, trimmed, case-insensitive exact token match).
+
+Either filter can be omitted independently. The `InventoryPage` fetches available tags lazily from `/api/inventory/tags` on the first time the dropdown is opened.
+
+#### CSV tag validation
+
+Both `AddItemPage` and `ExpandedPanel` validate the tags field on submit. The rule: if the field is non-empty, every comma-separated token must be non-empty after trimming. This rejects trailing commas (`motor,`), leading commas (`,motor`), and consecutive commas (`motor,,battery`). An inline field error is shown and the form is blocked from submitting until the value is corrected.
 
 ### Delete Inventory Item
 
