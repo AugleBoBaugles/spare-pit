@@ -1,49 +1,22 @@
-import fs from 'fs';
-import sqlite3 from 'sqlite3';
-import { open } from 'sqlite';
+import { getDb } from './db.js';
 
-export async function initDb(dbPath = 'db/frc-inventory.db') {
-  const dbExists = fs.existsSync(dbPath);
+// Verifies the Supabase inventory table is reachable.
+// Throws a descriptive error if the table doesn't exist or the connection fails.
+// Call this at server startup to catch misconfiguration early.
+export async function initDb() {
+  const db = getDb();
 
-  const db = await open({
-    filename: dbPath,
-    driver: sqlite3.Database
-  });
-
-  if (!dbExists) {
-    console.log('New database created.');
-  } else {
-    console.log('Database already exists.');
-  }
-
-  await db.exec(`
-    CREATE TABLE IF NOT EXISTS inventory (
-      id INTEGER PRIMARY KEY,
-      name TEXT NOT NULL,
-      type TEXT,
-      area TEXT,
-      location TEXT,
-      status TEXT,
-      quantity INTEGER,
-      condition TEXT,
-      itemImage TEXT,
-      checkOutBy TEXT,
-      lastUpdated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      tags TEXT,
-      notes TEXT,
-      needsRestock INTEGER DEFAULT 0
-    )
-  `);
-
-  // Migration: add needsRestock to databases created before this column existed.
-  // ALTER TABLE fails if the column already exists, so we swallow that error.
   try {
-    await db.run('ALTER TABLE inventory ADD COLUMN needsRestock INTEGER DEFAULT 0');
-  } catch {
-    // Column already present — nothing to do.
+    await db.query('SELECT 1 FROM inventory LIMIT 1');
+  } catch (error) {
+    console.error('Unable to verify inventory table:', error.message);
+    throw new Error(
+      'Supabase inventory table is unavailable. ' +
+      'Create the table by running server/db/supabase-schema.sql in the Supabase SQL editor, ' +
+      'then restart the server.'
+    );
   }
 
-  console.log('Inventory database is set up and ready to use.');
-
+  console.log('Supabase inventory table verified.');
   return db;
 }

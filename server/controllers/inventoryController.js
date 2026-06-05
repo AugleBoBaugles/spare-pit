@@ -13,6 +13,16 @@ export const getTags = async (req, res) => {
     }
 };
 
+// Returns true and sends a 503 response when DATABASE_URL is not configured.
+// Call at the top of every catch block so misconfiguration surfaces clearly to the frontend.
+function missingDbConfig(err, res) {
+  if (err.code !== 'MISSING_DB_CONFIG') return false;
+  res.status(503).json({
+    error: 'The server is not connected to a database. Ensure the DATABASE_URL environmental variable is set in the server and points to a valid Supabase transaction connection string.'
+  });
+  return true;
+}
+
 /*
  * GET /inventory - Retrieve all inventory items
  */
@@ -21,6 +31,7 @@ export const getAllInventory = async (req, res) => {
         const inventory = await getAllInventoryService();
         res.status(200).json(inventory);
     } catch (err) {
+        if (missingDbConfig(err, res)) return;
         console.error('Error fetching inventory:', err);
         res.status(500).json({ error: 'Failed to retrieve inventory items' });
     }
@@ -34,6 +45,7 @@ export const getSubteams = async (req, res) => {
         const subteams = await getSubteamsService();
         res.status(200).json(subteams);
     } catch (err) {
+        if (missingDbConfig(err, res)) return;
         console.error('Error fetching subteams:', err);
         res.status(500).json({ error: 'Failed to retrieve subteams' });
     }
@@ -84,6 +96,7 @@ export const postTool = async (req, res) => {
         const result = await postInventoryService(item);
         res.status(201).json(result);
     } catch (err) {
+        if (missingDbConfig(err, res)) return;
         console.error('Error posting tool:', err);
         res.status(500).json({ error: 'Failed to add inventory item' });
     }
@@ -106,6 +119,7 @@ export const deleteTool = async (req, res) => {
             deleted: deletedItem,
         });
     } catch (err) {
+        if (missingDbConfig(err, res)) return;
         console.error('Error deleting inventory item:', err);
         if (err.message === 'Inventory item not found') {
             return res.status(404).json({ error: 'Inventory item not found' });
@@ -155,6 +169,7 @@ export const patchInventory = async (req, res) => {
         const updated = await patchInventoryService(id, updates);
         res.status(200).json(updated);
     } catch (err) {
+        if (missingDbConfig(err, res)) return;
         console.error('Error patching inventory:', err);
         res.status(err.status || 500).json({ error: err.message || 'Failed to update inventory item' });
     }

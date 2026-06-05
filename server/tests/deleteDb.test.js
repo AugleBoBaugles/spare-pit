@@ -1,28 +1,28 @@
-import fs from 'fs';
-import { deleteDb } from '../db/deleteDb.js';
+import { jest } from '@jest/globals';
 
-const TEST_DB = './db/test.db';
+const mockQuery = jest.fn();
+const mockGetDb = jest.fn().mockReturnValue({ query: mockQuery });
+
+await jest.unstable_mockModule('../db/db.js', () => ({
+  getDb: mockGetDb,
+}));
+
+const { deleteDb } = await import('../db/deleteDb.js');
 
 afterEach(() => {
-  if (fs.existsSync(TEST_DB)) {
-    fs.unlinkSync(TEST_DB);
-  }
+  jest.clearAllMocks();
 });
 
-test('deletes existing database file', () => {
-  fs.writeFileSync(TEST_DB, 'fake db');
+test('deleteDb clears the Supabase inventory table', async () => {
+  mockQuery.mockResolvedValue({ rowCount: 5 });
 
-  expect(fs.existsSync(TEST_DB)).toBe(true);
-
-  deleteDb(TEST_DB);
-
-  expect(fs.existsSync(TEST_DB)).toBe(false);
+  await expect(deleteDb()).resolves.toBeUndefined();
+  expect(mockGetDb).toHaveBeenCalled();
+  expect(mockQuery).toHaveBeenCalledWith(expect.stringMatching(/DELETE FROM inventory/i));
 });
 
-test('does nothing if database does not exist', () => {
-  expect(fs.existsSync(TEST_DB)).toBe(false);
+test('deleteDb throws when the query fails', async () => {
+  mockQuery.mockRejectedValue(new Error('connection error'));
 
-  deleteDb(TEST_DB);
-
-  expect(fs.existsSync(TEST_DB)).toBe(false);
+  await expect(deleteDb()).rejects.toThrow('connection error');
 });

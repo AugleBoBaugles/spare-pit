@@ -1,4 +1,4 @@
-import { getAllInventory, findInventoryByName, insertInventoryItem, getDistinctSubteams, getInventoryColumns, findInventoryById, updateInventoryItem, deleteInventoryById, getAllTagStrings } from '../models/inventoryModel.js';
+import { getAllInventory, findInventoryByName, insertInventoryItem, getDistinctSubteams, findInventoryById, updateInventoryItem, deleteInventoryById, getAllTagStrings } from '../models/inventoryModel.js';
 
 /*
 Returns an array of all inventory items in the database. Each item includes all fields defined in the inventory schema.
@@ -8,8 +8,13 @@ export async function getAllInventoryService() {
     return inventory;
 }
 
-const NON_PATCHABLE = ['id', 'lastUpdated'];
-export const patchableColumns = (await getInventoryColumns()).filter(col => !NON_PATCHABLE.includes(col));
+// Columns that controllers are allowed to write via PATCH or POST.
+// id and lastUpdated are intentionally excluded: id is auto-generated,
+// lastUpdated is always set by the service layer to the current timestamp.
+export const patchableColumns = [
+  'name', 'type', 'area', 'location', 'status',
+  'quantity', 'condition', 'itemImage', 'checkOutBy', 'tags', 'notes', 'needsRestock'
+];
 
 /*
 Updates an existing inventory item by ID with the provided fields.
@@ -72,3 +77,4 @@ export const deleteInventoryService = async (id) => {
 
     return inventory;
 };
+

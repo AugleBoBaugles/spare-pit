@@ -21,11 +21,68 @@ git clone <your-forked-repo-url>
 cd spare-pit
 ```
 
-### Initialize Inventory Database
+### Database Setup
+
+The app supports two database modes. **Choose one before starting the server.**
+
+---
+
+#### Option A — Supabase (shared cloud database, recommended for team use)
+
+This is the default. All team members connect to the same database, so changes are visible instantly to everyone.
+
+**Step 1 — Create a Supabase project**
+
+1. Sign up or log in at [supabase.com](https://supabase.com)
+2. Click **New project**, give it a name (e.g. `frc-inventory`), and wait for it to provision
+
+**Step 2 — Create the inventory table**
+
+1. In your project, open **SQL Editor → New Query**
+2. Paste the entire contents of [`server/db/supabase-schema.sql`](server/db/supabase-schema.sql) and click **Run**
+
+**Step 3 — Get your connection string**
+
+1. Go to **Settings → Database → Connection string**
+2. Select the **Transaction pooler** tab
+3. Copy the connection string — it looks like:
+   ```
+   postgresql://postgres.<project-ref>:[YOUR-PASSWORD]@aws-1-<region>.pooler.supabase.com:6543/postgres
+   ```
+
+**Step 4 — Configure the server**
+
+```bash
+cd server
+cp .env.example .env
 ```
+
+Open `server/.env` and paste your connection string as the value of `DATABASE_URL`:
+
+```env
+DATABASE_URL=postgresql://postgres.xxxx:[YOUR-PASSWORD]@aws-1-us-west-2.pooler.supabase.com:6543/postgres
+```
+
+**Step 5 — Verify the connection**
+
+```bash
+cd server
+npm install
 npm run init-db
 ```
+
+A successful run prints `Supabase inventory table verified.` If you see an error, double-check your `DATABASE_URL` and confirm the schema was applied in Step 2.
+
 ---
+
+#### Option B — Local SQLite (no internet required, single-machine only)
+
+Use this when you want to run the app locally without setting up Supabase — useful for frontend development or quick testing. Data lives in a local file and is **not shared between machines**.
+
+No configuration is needed. See [Local SQLite Development](#local-sqlite-development) in the Developer Notes for how to switch the app to this mode.
+
+---
+
 ### Run Start Script
 *This should be done from the root of the project*
 #### Windows (Command Prompt)
@@ -150,37 +207,70 @@ Click the toggle once to switch modes. The preference is active for the current 
 #### Reset Database
 *Warning: This will delete ALL the contents of your database. Proceed with caution!*
 
-`npm run reset-db`
+**Supabase (default):** Clears all rows from the cloud inventory table.
+```
+npm run reset-db
+```
+
+**SQLite (local dev):** Deletes and recreates the local database file.
+```bash
+cd server
+node -e "import('./db/deleteDb.sqlite.js').then(m => m.deleteDb())"
+node scripts/initDbScript.js    # re-initialize with SQLite (swap imports first — see Local SQLite Development)
+```
 ## Developer Notes
-### DB Schema
+
+### Database: Supabase vs. SQLite
+
+The app ships with two complete database backends. **Supabase (PostgreSQL via `pg`)** is the default for shared, persistent data. **SQLite** is kept as a local-only alternative for development without internet access.
+
+| | Supabase (default) | SQLite (local dev) |
+|---|---|---|
+| Shared across machines | Yes | No |
+| Data persists across restarts | Yes | Yes (local file) |
+| Setup required | Yes (see Quick Start) | None |
+| Connection file | `server/db/db.js` | `server/db/db.sqlite.js` |
+| Model file | `server/models/inventoryModel.js` | `server/models/inventoryModel.sqlite.js` |
+
+#### Local SQLite Development
+
+To run the app with a local SQLite database instead of Supabase:
+
+1. **Swap the model import** in [`server/services/inventoryService.js`](server/services/inventoryService.js):
+   ```js
+   // Change this line:
+   import { ... } from '../models/inventoryModel.js';
+   // To this:
+   import { ... } from '../models/inventoryModel.sqlite.js';
+   ```
+
+2. **No `.env` needed.** The SQLite connection (`db.sqlite.js`) is self-initializing — it creates `server/db/frc-inventory.db` and the inventory table automatically on first use.
+
+3. **Start the server normally.** `npm run dev` or `npm start` from the `server/` directory.
+
+> **Note:** `npm run init-db`, `npm run reset-db`, and `npm run seed-db` all talk to Supabase (they import from the default `db.js`). When running in SQLite mode, skip those scripts — the database is initialized automatically on first connection.
+
+#### Environment Variables
+
+| Variable | Required for | Description |
+|---|---|---|
+| `DATABASE_URL` | Supabase mode | Transaction Pooler connection string from Supabase dashboard |
+
+No environment variables are needed for local SQLite development.
+
+#### DB Schema
+
+The Supabase schema is in [`server/db/supabase-schema.sql`](server/db/supabase-schema.sql). The SQLite schema is embedded in [`server/db/db.sqlite.js`](server/db/db.sqlite.js).
+
 ```mermaid
 erDiagram
     INVENTORY {
-        integer id PK
         string name
         string type
-        string area
         string location
         string status
-        integer quantity
-        string condition
-        string itemImage
-        string checkOutBy
-        timestamp lastUpdated
-        string tags
-        string notes
-        integer needsRestock
     }
 ```
-
-### needsRestock field
-
-`needsRestock` is an `INTEGER` column (default `0`) on the `inventory` table. It acts as a boolean flag: `1` means the item is flagged for restock, `0` means it is not.
-
-The flag is toggled via `PATCH /api/inventory/:id` with `{ needsRestock: 1 }` or `{ needsRestock: 0 }`. When a student marks an item as restocked from the Dashboard, the PATCH updates both `needsRestock` and `quantity` in a single request.
-
-`initDb.js` includes an `ALTER TABLE` migration so the column is added to existing databases on next server start — no manual reset needed.
-
 ### Server Architecture
 
 Incoming requests travel through a chain of layers, each with a single responsibility:
@@ -200,37 +290,6 @@ App -> Routers -> Controllers -> Services -> Models -> DB
 **Models** (`models/`) are the only layer that talks to the database directly. They contain the SQL queries and return raw results up to the service.
 
 **DB** (`db/db.js`) opens and manages the SQLite database connection.
-
-### Tag Filter
-
-#### GET /api/inventory/tags
-
-Returns a deduplicated, sorted, lowercase array of all tag strings currently in the database.
-
-**Success response (200):**
-```json
-["battery", "drilling", "motor", "power"]
-```
-
-**Error response:**
-| Status | Condition |
-|---|---|
-| 500 | Unexpected server error |
-
-**Implementation:** The model layer fetches the raw `tags` column from every row that has a non-null, non-empty value. The service layer splits each value on commas, trims whitespace, lowercases each token, deduplicates with a `Set`, and sorts alphabetically before returning.
-
-#### Tag filter architecture (frontend)
-
-The tag filter runs as a **separate pass** from the text search inside `filterInventory(items, query, activeTags)`:
-
-1. Text search (`query`) is applied first — case-insensitive substring match across name, type, location, status.
-2. Tag filter (`activeTags`) is applied to the result — AND logic, meaning every selected tag must appear in the item's `tags` field (split on comma, trimmed, case-insensitive exact token match).
-
-Either filter can be omitted independently. The `InventoryPage` fetches available tags lazily from `/api/inventory/tags` on the first time the dropdown is opened.
-
-#### CSV tag validation
-
-Both `AddItemPage` and `ExpandedPanel` validate the tags field on submit. The rule: if the field is non-empty, every comma-separated token must be non-empty after trimming. This rejects trailing commas (`motor,`), leading commas (`,motor`), and consecutive commas (`motor,,battery`). An inline field error is shown and the form is blocked from submitting until the value is corrected.
 
 ### Delete Inventory Item
 

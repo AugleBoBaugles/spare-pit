@@ -1,4 +1,7 @@
-import { initDb } from '../db/initDb.js';
+// Seeds the Supabase inventory table with sample data.
+// Requires DATABASE_URL to be set in server/.env.
+// Run with: npm run seed-db
+import { insertInventoryItem } from '../models/inventoryModel.js';
 
 const seedData = [
   // Tools
@@ -43,34 +46,16 @@ const seedData = [
 ];
 
 async function seed() {
-    const db = await initDb();
+  console.log('Seeding database with initial inventory data...');
 
-    console.log('Seeding database with initial inventory data...');
+  for (const item of seedData) {
+    await insertInventoryItem({ ...item, lastUpdated: Date.now() });
+  }
 
-    for (const item of seedData) {
-        await db.run(
-            `INSERT INTO inventory 
-              (name, type, area, location, status, quantity, condition, itemImage, checkOutBy, tags, notes) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            item.name,
-            item.type ?? null,
-            item.area ?? null,
-            item.location ?? null,
-            item.status ?? null,
-            item.quantity ?? null,
-            item.condition ?? null,
-            item.itemImage ?? null,
-            item.checkOutBy ?? null,
-            item.tags ?? null,
-            item.notes ?? null
-        );
-    }
-
-    console.log(`Database seeding completed. ${seedData.length} items inserted.`);
-    await db.close();
+  console.log(`Database seeding completed. ${seedData.length} items inserted.`);
 }
 
 seed().catch(err => {
-    console.error('Error occurred while seeding the database:', err);
-    process.exit(1);
+  console.error('Error occurred while seeding the database:', err);
+  process.exit(1);
 });
