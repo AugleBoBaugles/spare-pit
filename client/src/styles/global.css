@@ -181,6 +181,54 @@ hr {
   margin: 1.5rem 0;
 }
 
+/* ── Needs Restock thumb toggle (used on Inventory expanded panel and Dashboard) ── */
+
+.restock-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--color-text-primary);
+}
+
+.restock-toggle:hover {
+  background: none;
+  color: var(--color-text-primary);
+}
+
+.restock-toggle__track {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--color-border-strong);
+  transition: background 0.2s ease;
+}
+
+.restock-toggle--on .restock-toggle__track {
+  background: var(--color-accent);
+}
+
+.restock-toggle__thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  transition: transform 0.2s ease;
+}
+
+.restock-toggle--on .restock-toggle__thumb {
+  transform: translateX(16px);
+}
+
 #root {
   max-width: 960px;
   margin: 0 auto;

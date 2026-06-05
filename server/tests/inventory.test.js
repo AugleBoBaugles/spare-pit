@@ -7,7 +7,8 @@ const mockDeleteInventoryService = jest.fn();
 const mockPatchInventoryService = jest.fn();
 const mockPatchableColumns = [
   'name', 'type', 'area', 'location', 'status',
-  'quantity', 'condition', 'itemImage', 'checkOutBy', 'tags', 'notes'
+  'quantity', 'condition', 'itemImage', 'checkOutBy', 'tags', 'notes',
+  'needsRestock'
 ];
 const mockGetSubteamsService = jest.fn();
 const mockGetTagsService = jest.fn();
@@ -504,5 +505,50 @@ describe('PATCH /api/inventory/:id', () => {
     expect(consoleSpy).toHaveBeenCalledWith('Error patching inventory:', expect.any(Error));
 
     consoleSpy.mockRestore();
+  });
+
+  // ── needsRestock toggle ────────────────────────────────────────────────────
+
+  test('200: sets needsRestock to 1 (flag on)', async () => {
+    const flaggedItem = { ...mockInventory[0], needsRestock: 1 };
+    mockPatchInventoryService.mockResolvedValue(flaggedItem);
+
+    const { default: request } = await import('supertest');
+    const res = await request(app).patch('/api/inventory/1').send({ needsRestock: 1 });
+
+    expect(res.status).toBe(200);
+    expect(res.body.needsRestock).toBe(1);
+    const [, updates] = mockPatchInventoryService.mock.calls[0];
+    expect(updates).toHaveProperty('needsRestock', 1);
+  });
+
+  test('200: sets needsRestock to 0 (flag off)', async () => {
+    const unflaggedItem = { ...mockInventory[0], needsRestock: 0 };
+    mockPatchInventoryService.mockResolvedValue(unflaggedItem);
+
+    const { default: request } = await import('supertest');
+    const res = await request(app).patch('/api/inventory/1').send({ needsRestock: 0 });
+
+    expect(res.status).toBe(200);
+    expect(res.body.needsRestock).toBe(0);
+    const [, updates] = mockPatchInventoryService.mock.calls[0];
+    expect(updates).toHaveProperty('needsRestock', 0);
+  });
+
+  test('200: needsRestock flag is preserved when other fields are updated', async () => {
+    // Simulates updating quantity while the item is already flagged.
+    const itemWithFlag = { ...mockInventory[0], quantity: 5, needsRestock: 1 };
+    mockPatchInventoryService.mockResolvedValue(itemWithFlag);
+
+    const { default: request } = await import('supertest');
+    const res = await request(app).patch('/api/inventory/1').send({ quantity: 5 });
+
+    expect(res.status).toBe(200);
+    // The flag value comes from the service/DB — the patch body only touched quantity.
+    expect(res.body.needsRestock).toBe(1);
+    const [, updates] = mockPatchInventoryService.mock.calls[0];
+    // Only quantity was in the patch body, so needsRestock must NOT be in updates.
+    expect(updates).not.toHaveProperty('needsRestock');
+    expect(updates).toHaveProperty('quantity', 5);
   });
 });

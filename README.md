@@ -42,6 +42,7 @@ start.bat
 
 1. [Viewing and Editing Inventory](#viewing-and-editing-inventory)
 1. [Filtering by Tags](#filtering-by-tags)
+1. [Flagging Items as Needs Restock](#flagging-items-as-needs-restock)
 1. [Deleting an Item](#deleting-an-item)
 1. [Dark Mode](#dark-mode)
 1. [Troubleshooting](#troubleshooting)
@@ -61,7 +62,7 @@ Click the row again to collapse it.
 | Status | What it means |
 |---|---|
 | Available | In the pit and ready to use |
-| Checked out | Signed out by a subteam — see "Checked out by" for who has it |
+| Checked out | Signed out by a subteam — see "Last Checked Out By" for who last had it |
 | Maintenance | Out of service, do not use |
 | Missing | Cannot be located — report to a lead if you find it |
 
@@ -101,6 +102,24 @@ Tags are stored as a comma-separated list in the **Tags** field, e.g. `motor, ba
 - Separate multiple tags with a comma.
 - No empty segments — `motor,` or `motor,,battery` will be rejected with an inline error.
 - Tags are case-insensitive when filtering (`Motor` and `motor` are treated as the same tag).
+### Flagging Items as Needs Restock
+
+Use this when you notice that an item is running low and needs to be ordered.
+
+#### Flagging an item
+
+1. Find the item in the inventory list and click its row to expand it.
+2. At the bottom of the expanded panel, click the **Needs Restock** toggle. The switch slides right to show the item is flagged.
+3. To clear the flag from the expanded panel, click the toggle again — the switch slides back left.
+
+#### Ordering from the Dashboard
+
+1. Go to the **Dashboard**. Flagged items appear in the **Needs restock** section, showing each item's name, quantity, and location.
+2. When you have ordered an item, click **Mark as restocked** next to it.
+3. A quantity field will appear, pre-filled with the current quantity. Update it to reflect how many are now in the inventory, then click **Save**.
+4. The item is removed from the restock list and its quantity is updated.
+
+> **Note:** The Needs Restock flag is independent of an item's status — you can flag any item regardless of whether it is available, checked out, or otherwise.
 
 ### Deleting an Item
 
@@ -136,14 +155,32 @@ Click the toggle once to switch modes. The preference is active for the current 
 ### DB Schema
 ```mermaid
 erDiagram
-    INVENTORY 
     INVENTORY {
+        integer id PK
         string name
         string type
+        string area
         string location
         string status
+        integer quantity
+        string condition
+        string itemImage
+        string checkOutBy
+        timestamp lastUpdated
+        string tags
+        string notes
+        integer needsRestock
     }
 ```
+
+### needsRestock field
+
+`needsRestock` is an `INTEGER` column (default `0`) on the `inventory` table. It acts as a boolean flag: `1` means the item is flagged for restock, `0` means it is not.
+
+The flag is toggled via `PATCH /api/inventory/:id` with `{ needsRestock: 1 }` or `{ needsRestock: 0 }`. When a student marks an item as restocked from the Dashboard, the PATCH updates both `needsRestock` and `quantity` in a single request.
+
+`initDb.js` includes an `ALTER TABLE` migration so the column is added to existing databases on next server start — no manual reset needed.
+
 ### Server Architecture
 
 Incoming requests travel through a chain of layers, each with a single responsibility:
