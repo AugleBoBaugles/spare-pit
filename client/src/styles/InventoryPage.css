@@ -184,6 +184,23 @@
   padding: 12px 24px 16px;
 }
 
+/* Needs Restock toggle — sits below the read-mode fields grid */
+
+.expanded-panel__restock {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 24px 16px;
+  border-top: 0.5px solid var(--color-border);
+}
+
+.expanded-panel__restock-error {
+  font-size: 12px;
+  color: var(--color-error-fg);
+}
+
+/* .restock-toggle styles live in global.css so they work on any page */
+
 /* Three-dot actions menu */
 
 .col-actions {
