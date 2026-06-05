@@ -65,6 +65,15 @@ function InventoryPage() {
 
   const filteredData = filterInventory(data, searchQuery, activeTags);
 
+  // Count how many items carry each tag across the full (unfiltered) dataset.
+  const tagCounts = {};
+  for (const item of data) {
+    if (!item.tags) continue;
+    for (const token of item.tags.split(',').map(t => t.trim().toLowerCase()).filter(Boolean)) {
+      tagCounts[token] = (tagCounts[token] || 0) + 1;
+    }
+  }
+
   function handleToggle(id) {
     setExpandedId((prev) => (prev === id ? null : id));
   }
@@ -94,6 +103,7 @@ function InventoryPage() {
               tags={availableTags}
               activeTags={activeTags}
               onTagToggle={handleTagToggle}
+              tagCounts={tagCounts}
             />
           )}
         </div>

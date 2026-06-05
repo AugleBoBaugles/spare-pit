@@ -4,6 +4,7 @@ import { describe, it, expect, vi } from 'vitest';
 import TagFilterDropdown from './TagFilterDropdown';
 
 const TAGS = ['battery', 'motor', 'power'];
+const TAG_COUNTS = { battery: 2, motor: 5, power: 1 };
 
 describe('TagFilterDropdown', () => {
   it('renders a chip for every available tag', () => {
@@ -44,5 +45,16 @@ describe('TagFilterDropdown', () => {
     render(<TagFilterDropdown tags={TAGS} activeTags={['motor']} onTagToggle={onTagToggle} />);
     await user.click(screen.getByRole('button', { name: 'motor' }));
     expect(onTagToggle).toHaveBeenCalledWith('motor');
+  });
+
+  it('displays the item count next to each tag chip', () => {
+    render(<TagFilterDropdown tags={TAGS} activeTags={[]} onTagToggle={vi.fn()} tagCounts={TAG_COUNTS} />);
+    expect(screen.getByText('5')).toBeInTheDocument(); // motor count
+    expect(screen.getByText('2')).toBeInTheDocument(); // battery count
+  });
+
+  it('shows 0 for a tag with no matching count entry', () => {
+    render(<TagFilterDropdown tags={['newTag']} activeTags={[]} onTagToggle={vi.fn()} tagCounts={{}} />);
+    expect(screen.getByText('0')).toBeInTheDocument();
   });
 });
