@@ -3,11 +3,15 @@ import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import AddItemPage from './AddItemPage'
 
+// Returns a fetch stub that handles the two on-mount setup calls (subteams + tags)
+// with empty arrays, and uses `data`/`ok` for any other request (e.g. the POST).
 function makeFetch(data, { ok = true } = {}) {
-  return vi.fn().mockResolvedValue({
-    ok,
-    json: () => Promise.resolve(data),
-  })
+  return vi.fn().mockImplementation((url) => {
+    if (url === '/api/inventory/subteams' || url === '/api/inventory/tags') {
+      return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+    }
+    return Promise.resolve({ ok, json: () => Promise.resolve(data) });
+  });
 }
 
 async function fillRequired(user) {
@@ -158,5 +162,61 @@ describe('AddItemPage', () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Network error')))
     render(<AddItemPage onNavigate={onNavigate} />)
     expect(screen.getByRole('button', { name: /add item/i })).toBeInTheDocument()
+  })
+})
+
+describe('AddItemPage — tag validation', () => {
+  let onNavigate
+
+  beforeEach(() => { onNavigate = vi.fn() })
+  afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals() })
+
+  async function fillRequiredAndTags(user, tagsValue) {
+    await user.type(screen.getByLabelText(/item name/i), 'Cordless Drill')
+    await user.selectOptions(screen.getByLabelText(/^type/i), 'tool')
+    await user.type(screen.getByLabelText(/location/i), 'Bay 1')
+    const tagsInput = screen.getByLabelText(/^tags/i)
+    await user.clear(tagsInput)
+    if (tagsValue) await user.type(tagsInput, tagsValue)
+  }
+
+  it('shows an inline error when tags has a trailing comma', async () => {
+    vi.stubGlobal('fetch', makeFetch([]))
+    const user = userEvent.setup()
+    render(<AddItemPage onNavigate={onNavigate} />)
+    await fillRequiredAndTags(user, 'motor,')
+    await user.click(screen.getByRole('button', { name: /add item/i }))
+    expect(screen.getByText(/no empty segments/i)).toBeInTheDocument()
+    expect(onNavigate).not.toHaveBeenCalled()
+  })
+
+  it('shows an inline error when tags has consecutive commas', async () => {
+    vi.stubGlobal('fetch', makeFetch([]))
+    const user = userEvent.setup()
+    render(<AddItemPage onNavigate={onNavigate} />)
+    await fillRequiredAndTags(user, 'motor,,battery')
+    await user.click(screen.getByRole('button', { name: /add item/i }))
+    expect(screen.getByText(/no empty segments/i)).toBeInTheDocument()
+    expect(onNavigate).not.toHaveBeenCalled()
+  })
+
+  it('accepts valid comma-separated tags and submits', async () => {
+    vi.stubGlobal('fetch', makeFetch({ id: 1, possibleDuplicate: null }))
+    const user = userEvent.setup()
+    render(<AddItemPage onNavigate={onNavigate} />)
+    await fillRequiredAndTags(user, 'motor, battery')
+    await user.click(screen.getByRole('button', { name: /add item/i }))
+    await waitFor(() => expect(onNavigate).toHaveBeenCalledWith('inventory'))
+    expect(screen.queryByText(/no empty segments/i)).not.toBeInTheDocument()
+  })
+
+  it('accepts an empty tags field with no error', async () => {
+    vi.stubGlobal('fetch', makeFetch({ id: 1, possibleDuplicate: null }))
+    const user = userEvent.setup()
+    render(<AddItemPage onNavigate={onNavigate} />)
+    await fillRequiredAndTags(user, '')
+    await user.click(screen.getByRole('button', { name: /add item/i }))
+    await waitFor(() => expect(onNavigate).toHaveBeenCalledWith('inventory'))
+    expect(screen.queryByText(/no empty segments/i)).not.toBeInTheDocument()
   })
 })
