@@ -2,6 +2,8 @@
 
 Spare Pit is an inventory management app built for FIRST Robotics Competition (FRC) teams. It gives students a shared, real-time way to track tools, parts, and materials — what's available, who has what, and what needs to be ordered.
 
+Built by [Augy Markham](https://www.linkedin.com/in/augy-markham/) and [Rebecca Riffle](https://www.linkedin.com/in/rebecca-riffle/) at Green River College.
+
 **Features**
 - Browse and search inventory by name, type, location, or status
 - Expand any item to view full details: area, quantity, condition, tags, and notes
