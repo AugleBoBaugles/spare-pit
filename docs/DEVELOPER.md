@@ -4,6 +4,7 @@ This document covers everything you need to set up, run, and extend Spare Pit. F
 
 **Contents**
 1. [Quick Start](#quick-start)
+1. [Deployment](#deployment)
 1. [Database: Supabase vs. SQLite](#database-supabase-vs-sqlite)
 1. [Server Architecture](#server-architecture)
 1. [API Reference](#api-reference)
@@ -102,6 +103,13 @@ start.bat
 ```
 ./start.sh
 ```
+
+---
+
+## Deployment
+
+[Deployment Guide](https://docs.google.com/document/d/1L76iXOH6ml9GdBn7CURlDEe_7l-3rIdocH12cPhhZ44)
+> This guide covers how to deploy the frontend, backend, and database to be publicly accessible to highschool students.
 
 ---
 
