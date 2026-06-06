@@ -123,7 +123,7 @@ The app ships with two complete database backends. **Supabase (PostgreSQL via `p
 | Data persists across restarts | Yes | Yes (local file) |
 | Setup required | Yes (see Quick Start) | None |
 | Connection file | `server/db/db.js` | `server/db/db.sqlite.js` |
-| Model file | `server/models/inventoryModel.js` | `server/models/inventoryModel.sqlite.js` |
+| Model file | `server/models/inventoryModel.supabase.js` | `server/models/inventoryModel.sqlite.js` |
 
 ### Local SQLite Development
 
@@ -132,7 +132,7 @@ To run the app with a local SQLite database instead of Supabase:
 1. **Swap the model import** in [`server/services/inventoryService.js`](../server/services/inventoryService.js):
    ```js
    // Change this line:
-   import { ... } from '../models/inventoryModel.js';
+   import { ... } from '../models/inventoryModel.supabase.js';
    // To this:
    import { ... } from '../models/inventoryModel.sqlite.js';
    ```

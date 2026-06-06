@@ -4,7 +4,7 @@
 //
 // To switch the app to local SQLite instead:
 //   1. In server/services/inventoryService.js, change the model import to inventoryModel.sqlite.js
-//   2. See README → "Local SQLite Development" for full instructions
+//   2. See docs/DEVELOPER.md → "Local SQLite Development" for full instructions
 import { getDb } from '../db/db.js';
 
 // Columns whose names must be double-quoted in SQL to preserve camelCase casing.
