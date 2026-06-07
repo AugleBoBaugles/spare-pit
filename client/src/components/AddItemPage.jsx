@@ -1,102 +1,14 @@
-import { useState, useEffect } from "react";
+// Page for adding a new inventory item. All form logic lives in useAddItemForm.
 import '../styles/AddItemPage.css';
-
-const INITIAL_FORM = {
-  name: "", type: "", status: "available", checkOutBy: "",
-  area: "", location: "", quantity: 1, condition: "",
-  tags: "", notes: "", itemImage: "",
-};
+import { useAddItemForm } from '../utils/useAddItemForm';
+import { ITEM_TYPES, ITEM_STATUSES, ITEM_CONDITIONS } from '../utils/constants';
 
 function AddItemPage({ onNavigate }) {
-  const [form, setForm] = useState(INITIAL_FORM);
-  const [errors, setErrors] = useState({});
-  const [duplicate, setDuplicate] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [imagePreview, setImagePreview] = useState(null);
-  const [subteams, setSubteams] = useState([]);
-  const [tagSuggestions, setTagSuggestions] = useState([]);
-
-  useEffect(() => {
-    fetch("/api/inventory/subteams")
-      .then(r => r.json())
-      .then(setSubteams)
-      .catch(() => {});
-    fetch("/api/inventory/tags")
-      .then(r => r.json())
-      .then(setTagSuggestions)
-      .catch(() => {});
-  }, []);
-
-  function validate() {
-    const next = {};
-    if (!form.name.trim())                         next.name     = "Item name is required.";
-    if (!form.type)                                next.type     = "Type is required.";
-    if (!form.status)                              next.status   = "Status is required.";
-    if (!form.location.trim())                     next.location = "Location is required.";
-    if (form.quantity === "" || form.quantity === null) next.quantity = "Quantity is required.";
-    // Tags are optional, but if provided every comma-separated token must be non-empty.
-    if (form.tags.trim() && form.tags.split(',').some(t => t.trim() === '')) {
-      next.tags = 'Tags must be comma-separated words with no empty segments (e.g. "motor, battery").';
-    }
-    return next;
-  }
-
-  function handleChange(e) {
-    const { name, value } = e.target;
-    setForm(f => ({ ...f, [name]: value }));
-    setErrors(err => ({ ...err, [name]: undefined }));
-  }
-
-  function handleImageChange(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    setForm(f => ({ ...f, itemImage: `images/${file.name}` }));
-    setImagePreview(URL.createObjectURL(file));
-  }
-
-  function clearImage() {
-    setForm(f => ({ ...f, itemImage: "" }));
-    setImagePreview(null);
-  }
-
-  async function handleSubmit(e) {
-    e.preventDefault();
-    const next = validate();
-    if (Object.keys(next).length) { setErrors(next); return; }
-
-    const payload = {
-      ...form,
-      quantity: Number(form.quantity),
-      checkOutBy: form.status === "checked-out" ? form.checkOutBy || null : null,
-    };
-
-    setSubmitting(true);
-    try {
-      const res = await fetch("/api/inventory", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        const { error } = await res.json();
-        setErrors({ submit: error || "Something went wrong." });
-        return;
-      }
-
-      const data = await res.json();
-      if (data.possibleDuplicate) {
-        setDuplicate(true);
-        setTimeout(() => onNavigate("inventory"), 2500);
-      } else {
-        onNavigate("inventory");
-      }
-    } catch {
-      setErrors({ submit: "Network error — please try again." });
-    } finally {
-      setSubmitting(false);
-    }
-  }
+  const {
+    form, errors, duplicate, submitting, imagePreview,
+    subteams, tagSuggestions,
+    handleChange, handleImageChange, clearImage, handleSubmit,
+  } = useAddItemForm(() => onNavigate('inventory'));
 
   return (
     <div className="add-item-page">
@@ -135,9 +47,9 @@ function AddItemPage({ onNavigate }) {
               aria-invalid={!!errors.type}
             >
               <option value="">Select…</option>
-              <option value="tool">Tool</option>
-              <option value="part">Part</option>
-              <option value="material">Material</option>
+              {ITEM_TYPES.map(({ value, label }) => (
+                <option key={value} value={value}>{label}</option>
+              ))}
             </select>
             {errors.type && <span className="field-error">{errors.type}</span>}
           </div>
@@ -149,16 +61,15 @@ function AddItemPage({ onNavigate }) {
               value={form.status} onChange={handleChange}
               aria-invalid={!!errors.status}
             >
-              <option value="available">Available</option>
-              <option value="checked-out">Checked out</option>
-              <option value="maintenance">Maintenance</option>
-              <option value="missing">Missing</option>
+              {ITEM_STATUSES.map(({ value, label }) => (
+                <option key={value} value={value}>{label}</option>
+              ))}
             </select>
             {errors.status && <span className="field-error">{errors.status}</span>}
           </div>
         </div>
 
-        {form.status === "checked-out" && (
+        {form.status === 'checked-out' && (
           <div className="field">
             <label htmlFor="checkOutBy">Checked out by</label>
             <input
@@ -216,11 +127,9 @@ function AddItemPage({ onNavigate }) {
               id="condition" name="condition"
               value={form.condition} onChange={handleChange}
             >
-              <option value="">Select…</option>
-              <option value="new">New</option>
-              <option value="good">Good</option>
-              <option value="fair">Fair</option>
-              <option value="poor">Poor</option>
+              {ITEM_CONDITIONS.map(({ value, label }) => (
+                <option key={value} value={value}>{label}</option>
+              ))}
             </select>
           </div>
         </div>
@@ -281,9 +190,9 @@ function AddItemPage({ onNavigate }) {
 
         <div className="btn-row">
           <button type="submit" disabled={submitting}>
-            {submitting ? "Adding…" : "Add Item"}
+            {submitting ? 'Adding…' : 'Add Item'}
           </button>
-          <button type="button" onClick={() => onNavigate("inventory")}>
+          <button type="button" onClick={() => onNavigate('inventory')}>
             Cancel
           </button>
         </div>
