@@ -158,10 +158,20 @@ The Supabase schema is in [`server/db/supabase-schema.sql`](../server/db/supabas
 ```mermaid
 erDiagram
     INVENTORY {
+        int    id
         string name
         string type
+        string area
         string location
         string status
+        int    quantity
+        string condition
+        string itemImage
+        string checkOutBy
+        timestamp lastUpdated
+        string tags
+        string notes
+        int    needsRestock
     }
 ```
 
