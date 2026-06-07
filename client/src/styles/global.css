@@ -18,6 +18,9 @@
   --color-error-bg: #fff1f0;
   --color-error-fg: #c0392b;
 
+  --color-amber: #d97706;
+  --color-amber-hover: #b45309;
+
   --font-sans: 'DM Sans', sans-serif;
   --font-mono: 'DM Mono', monospace;
 
@@ -46,6 +49,9 @@
     --color-warn-fg: #d4890a;
     --color-error-bg: #2e0f0f;
     --color-error-fg: #d46060;
+
+    --color-amber: #f59e0b;
+    --color-amber-hover: #d97706;
   }
 }
 
@@ -66,6 +72,9 @@
   --color-warn-fg: #d4890a;
   --color-error-bg: #2e0f0f;
   --color-error-fg: #d46060;
+
+  --color-amber: #f59e0b;
+  --color-amber-hover: #d97706;
 }
 
 *,
