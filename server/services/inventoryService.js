@@ -1,80 +1,70 @@
-import { getAllInventory, findInventoryByName, insertInventoryItem, getDistinctSubteams, findInventoryById, updateInventoryItem, deleteInventoryById, getAllTagStrings } from '../models/inventoryModel.supabase.js';
-
-/*
-Returns an array of all inventory items in the database. Each item includes all fields defined in the inventory schema.
-*/
-export async function getAllInventoryService() {
-    const inventory = await getAllInventory();
-    return inventory;
-}
+// Business logic layer. Sits between controllers and models.
+// All validation and data shaping that isn't raw SQL lives here.
+import {
+  getAllInventory,
+  findInventoryByName,
+  insertInventoryItem,
+  getDistinctSubteams,
+  findInventoryById,
+  updateInventoryItem,
+  deleteInventoryById,
+  getAllTagStrings,
+} from '../models/inventoryModel.supabase.js';
 
 // Columns that controllers are allowed to write via PATCH or POST.
-// id and lastUpdated are intentionally excluded: id is auto-generated,
+// id and lastUpdated are excluded: id is auto-generated,
 // lastUpdated is always set by the service layer to the current timestamp.
 export const patchableColumns = [
   'name', 'type', 'area', 'location', 'status',
-  'quantity', 'condition', 'itemImage', 'checkOutBy', 'tags', 'notes', 'needsRestock'
+  'quantity', 'condition', 'itemImage', 'checkOutBy', 'tags', 'notes', 'needsRestock',
 ];
 
-/*
-Updates an existing inventory item by ID with the provided fields.
-Throws a 404 error if no item with the given ID exists.
-Returns the updated item.
-*/
+export async function getAllInventoryService() {
+  return getAllInventory();
+}
+
+// Throws a 404 error if no item with the given ID exists.
 export async function patchInventoryService(id, updates) {
-    const existing = await findInventoryById(id);
-    if (!existing) {
-        const err = new Error(`Inventory item with ID ${id} not found`);
-        err.status = 404;
-        throw err;
-    }
-    return updateInventoryItem(id, { ...updates, lastUpdated: Date.now() });
+  const existing = await findInventoryById(id);
+  if (!existing) {
+    const err = new Error(`Inventory item with ID ${id} not found`);
+    err.status = 404;
+    throw err;
+  }
+  return updateInventoryItem(id, { ...updates, lastUpdated: Date.now() });
 }
 
 export async function getSubteamsService() {
-    return getDistinctSubteams();
+  return getDistinctSubteams();
 }
 
-/*
- * Parses every item's tags string, deduplicates across items, and returns
- * a sorted lowercase array — e.g. ["battery", "motor", "power"].
- * Normalising to lowercase means "Motor" and "motor" are treated as one tag.
- */
+// Parses every item's tags string, deduplicates across items, and returns
+// a sorted lowercase array — e.g. ["battery", "motor", "power"].
 export async function getTagsService() {
-    const rawStrings = await getAllTagStrings();
-    const tagSet = new Set();
-    for (const raw of rawStrings) {
-        for (const token of raw.split(',')) {
-            const trimmed = token.trim().toLowerCase();
-            if (trimmed) tagSet.add(trimmed);
-        }
+  const rawStrings = await getAllTagStrings();
+  const tagSet = new Set();
+  for (const raw of rawStrings) {
+    for (const token of raw.split(',')) {
+      const trimmed = token.trim().toLowerCase();
+      if (trimmed) tagSet.add(trimmed);
     }
-    return [...tagSet].sort();
+  }
+  return [...tagSet].sort();
 }
 
-/*
-Returns the new item along with any possible duplicate (same name) found in the inventory.
-*/
+// Returns the new item along with any possible duplicate (same name, case-insensitive).
 export async function postInventoryService(item) {
-    const possibleDuplicate = await findInventoryByName(item.name);
-    const newItem = await insertInventoryItem({ ...item, lastUpdated: Date.now() });
-
-    return { ...newItem, possibleDuplicate: possibleDuplicate ? possibleDuplicate : null };
+  const possibleDuplicate = await findInventoryByName(item.name);
+  const newItem = await insertInventoryItem({ ...item, lastUpdated: Date.now() });
+  return { ...newItem, possibleDuplicate: possibleDuplicate ?? null };
 }
 
-/*
-Deletes an inventory item by its ID. If the item is not found, an error is thrown.
-Returns the deleted inventory item.
-*/
+// Throws if no item with the given ID exists. Returns the deleted item.
 export const deleteInventoryService = async (id) => {
-    const inventory = await findInventoryById(id);
-
-    if (!inventory) {
-        throw new Error('Inventory item not found');
-    }
-
-    await deleteInventoryById(id);
-
-    return inventory;
+  const inventory = await findInventoryById(id);
+  if (!inventory) {
+    throw new Error('Inventory item not found');
+  }
+  await deleteInventoryById(id);
+  return inventory;
 };
-

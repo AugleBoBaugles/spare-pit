@@ -1,3 +1,5 @@
+// Maps API URL paths to controller functions.
+// All routes are mounted under /api in app.js, so /inventory resolves to /api/inventory.
 import express from 'express';
 import { getAllInventory, postTool, patchInventory, getSubteams, deleteTool, getTags } from '../controllers/inventoryController.js';
 
