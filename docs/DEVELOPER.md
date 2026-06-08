@@ -12,7 +12,14 @@ This document covers everything you need to set up, run, and extend Spare Pit. F
 
 ---
 
-## Quick Start
+## Remote Deployment (Online)
+
+[Deployment Guide](https://docs.google.com/document/d/1L76iXOH6ml9GdBn7CURlDEe_7l-3rIdocH12cPhhZ44)
+> This guide covers how to deploy the frontend, backend, and database to be publicly accessible to highschool students.
+
+---
+
+## Local Deployment
 
 ### Fork and Clone
 
@@ -106,12 +113,7 @@ start.bat
 
 ---
 
-## Deployment
 
-[Deployment Guide](https://docs.google.com/document/d/1L76iXOH6ml9GdBn7CURlDEe_7l-3rIdocH12cPhhZ44)
-> This guide covers how to deploy the frontend, backend, and database to be publicly accessible to highschool students.
-
----
 
 ## Database: Supabase vs. SQLite
 
