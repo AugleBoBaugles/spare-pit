@@ -1,15 +1,9 @@
-import fs from 'fs';
-import path from 'path';
+import { getDb } from './db.js';
 
-export function deleteDb(dbPath = path.resolve('./db/frc-inventory.db')) {
-  console.log('Resetting database...');
-
-  if (fs.existsSync(dbPath)) {
-    fs.unlinkSync(dbPath);
-    console.log('Existing database deleted.');
-  } else {
-    console.log('No existing database found.');
-  }
-
-  console.log('Reset complete.');
+// Deletes all rows from the Supabase inventory table (the schema itself is preserved).
+// Intended for testing and development resets — use with caution in production.
+export async function deleteDb() {
+  const db = getDb();
+  await db.query('DELETE FROM inventory');
+  console.log('Supabase inventory table cleared.');
 }

@@ -38,6 +38,112 @@
   padding: 10px 12px;
 }
 
+/* Toolbar row that holds the search bar and tag filter button side by side */
+
+.inventory-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  margin-bottom: 1rem;
+}
+
+/* The SearchBar normally carries its own margin-bottom, but inside the controls
+   row the parent handles spacing, so we cancel it to keep alignment correct. */
+.inventory-controls .search-bar {
+  margin-bottom: 0;
+}
+
+/* Tag filter button — slightly smaller than the default button size */
+
+.tag-filter-btn {
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-size: 12px;
+  padding: 5px 10px;
+}
+
+/* Filled accent style when one or more tags are active */
+.tag-filter-btn--active {
+  background: var(--color-accent);
+  color: var(--color-bg);
+  border-color: var(--color-accent);
+}
+
+.tag-filter-btn--active:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+}
+
+/* Wrapper is positioned so the dropdown can be absolutely placed below the button */
+
+.tag-filter-wrapper {
+  position: relative;
+}
+
+/* Dropdown panel */
+
+.tag-filter-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 110;
+  min-width: 400px;
+  max-width: 640px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  padding: 10px;
+}
+
+.tag-filter-dropdown__list {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tag-filter-dropdown__empty {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  padding: 4px 2px;
+}
+
+/* Tag chips */
+
+.tag-chip {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-text-primary);
+  transition: background var(--transition), border-color var(--transition), color var(--transition);
+}
+
+.tag-chip:hover {
+  border-color: var(--color-accent);
+}
+
+.tag-chip__count {
+  margin-left: 5px;
+  font-size: 11px;
+  opacity: 0.65;
+}
+
+/* Active (selected) chip — filled accent background */
+.tag-chip--active {
+  background: var(--color-accent);
+  color: var(--color-bg);
+  border-color: var(--color-accent);
+}
+
+.tag-chip--active:hover {
+  border-color: var(--color-accent-hover);
+}
+
 /* InventoryRow — interactive row styles */
 
 .inventory-row {
@@ -183,6 +289,23 @@
   gap: 8px;
   padding: 12px 24px 16px;
 }
+
+/* Needs Restock toggle — sits below the read-mode fields grid */
+
+.expanded-panel__restock {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 24px 16px;
+  border-top: 0.5px solid var(--color-border);
+}
+
+.expanded-panel__restock-error {
+  font-size: 12px;
+  color: var(--color-error-fg);
+}
+
+/* .restock-toggle styles live in global.css so they work on any page */
 
 /* Three-dot actions menu */
 

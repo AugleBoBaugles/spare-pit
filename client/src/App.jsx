@@ -1,5 +1,6 @@
-import { useState } from "react";
-import './styles/global.css'
+// Root component. Owns the active page state and renders the nav and current page.
+import { useState } from 'react';
+import './styles/global.css';
 import AddItemPage from "./components/AddItemPage";
 import InventoryPage from "./components/InventoryPage/InventoryPage";
 import HomePage from "./components/HomePage";

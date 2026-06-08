@@ -1,46 +1,28 @@
 # Spare Pit
 
-This inventory app was designed by Green River College students Augy Markham and Rebecca Riffle  to help First Robotics Competition teams track and manage inventory.
+Spare Pit is an inventory management app built for FIRST Robotics Competition (FRC) teams. It gives students a shared, real-time way to track tools, parts, and materials — what's available, who has what, and what needs to be ordered.
 
-**Contents**
-1. [Quick Start](#quick-start)
-1. [User Guide](#user-guide)
-1. [Developer Notes](#developer-notes)
+Built by [Augy Markham](https://www.linkedin.com/in/augy-markham/) and [Rebecca Riffle](https://www.linkedin.com/in/rebecca-riffle/) at Green River College.
 
-## Quick Start
-### Fork and Clone repo
-Prerequisite: Free GitHub account, code editor such as VS Code
+**Features**
+- Browse and search inventory by name, type, location, or status
+- Expand any item to view full details: area, quantity, condition, tags, and notes
+- Edit items inline directly from the inventory list
+- Filter by one or more tags to find items by category
+- Flag items that need restocking and manage orders from the Dashboard
+- Delete items with a typed confirmation step to prevent accidents
+- Light and dark mode
 
-1. Go to the repository: https://github.com/AugleBoBaugles/spare-pit  
-2. Click the **Fork** button in the top-right corner to create your own copy of the repo  
-3. In your forked repo, click the green **Code** button and copy the HTTPS URL  
-4. Open a terminal and run:
+> **For developers:** See [docs/DEVELOPER.md](docs/DEVELOPER.md) to set up, run, and extend the app.
 
-```
-git clone <your-forked-repo-url>
-cd spare-pit
-```
-
-### Initialize Inventory Database
-```
-npm run init-db
-```
 ---
-### Run Start Script
-*This should be done from the root of the project*
-#### Windows (Command Prompt)
-```
-start.bat
-```
-#### macOS / Linux / Git Bash
-``` 
-./start.sh
-```
 
 ## User Guide
-**Contents**
 
+**Contents**
 1. [Viewing and Editing Inventory](#viewing-and-editing-inventory)
+1. [Filtering by Tags](#filtering-by-tags)
+1. [Flagging Items as Needs Restock](#flagging-items-as-needs-restock)
 1. [Deleting an Item](#deleting-an-item)
 1. [Dark Mode](#dark-mode)
 1. [Troubleshooting](#troubleshooting)
@@ -59,8 +41,8 @@ Click the row again to collapse it.
 
 | Status | What it means |
 |---|---|
-| Available | In the pit and ready to use |
-| Checked out | Signed out by a subteam — see "Checked out by" for who has it |
+| Available | In storage and ready to use |
+| Checked out | Signed out by a subteam — see "Last Checked Out By" for who last had it |
 | Maintenance | Out of service, do not use |
 | Missing | Cannot be located — report to a lead if you find it |
 
@@ -74,6 +56,51 @@ Click the row again to collapse it.
 6. Click **Save** to apply your changes, or **Cancel** to discard them and go back to the read view.
 
 If something goes wrong when saving, an error message will appear below the form. Your edits are preserved so you can try again.
+
+### Filtering by Tags
+
+Tags are short keywords attached to inventory items (e.g. `motor`, `battery`, `power`) that let you quickly narrow the list to a category of items.
+
+#### Using the tag filter
+
+1. On the inventory page, click the **Filter by tags** button to the right of the search bar.
+2. A panel opens showing every tag currently in the database as clickable chips.
+3. Click a chip to select it — the inventory table immediately updates to show only items that have that tag.
+4. Click additional chips to tighten the filter. **All selected tags must be present** on an item for it to appear (AND logic). For example, selecting `motor` and `battery` shows only items tagged with both.
+5. Click an active chip again to deselect it and widen the results.
+6. Click outside the panel to close it.
+
+When one or more tags are active the button label shows the count, e.g. **Filter by tags (2)**, so you can see what's active without reopening the panel.
+
+The tag filter and the search bar work together — text search narrows results first, then the tag filter is applied on top.
+
+#### Tag format when adding or editing items
+
+Tags are stored as a comma-separated list in the **Tags** field, e.g. `motor, battery` or `power,drilling`. Rules:
+
+- Each tag is a word or short phrase (letters, numbers, hyphens, spaces).
+- Separate multiple tags with a comma.
+- No empty segments — `motor,` or `motor,,battery` will be rejected with an inline error.
+- Tags are case-insensitive when filtering (`Motor` and `motor` are treated as the same tag).
+
+### Flagging Items as Needs Restock
+
+Use this when you notice that an item is running low and needs to be ordered.
+
+#### Flagging an item
+
+1. Find the item in the inventory list and click its row to expand it.
+2. At the bottom of the expanded panel, click the **Needs Restock** toggle. The switch slides right to show the item is flagged.
+3. To clear the flag from the expanded panel, click the toggle again — the switch slides back left.
+
+#### Ordering from the Dashboard
+
+1. Go to the **Dashboard**. Flagged items appear in the **Needs restock** section, showing each item's name, quantity, and location.
+2. When you have ordered an item, click **Mark as restocked** next to it.
+3. A quantity field will appear, pre-filled with the current quantity. Update it to reflect how many are now in the inventory, then click **Save**.
+4. The item is removed from the restock list and its quantity is updated.
+
+> **Note:** The Needs Restock flag is independent of an item's status — you can flag any item regardless of whether it is available, checked out, or otherwise.
 
 ### Deleting an Item
 
@@ -95,73 +122,13 @@ Spare Pit supports light and dark mode so you can view the inventory comfortably
 
 A dark mode toggle sits in the **upper-right corner** of every page.
 
-- Sun - Light Mode
-- Moon - Dark Mode
+- Sun icon — Light mode
+- Moon icon — Dark mode
 
 Click the toggle once to switch modes. The preference is active for the current session.
 
 ### Troubleshooting
-#### Reset Database
-*Warning: This will delete ALL the contents of your database. Proceed with caution!*
 
-`npm run reset-db`
-## Developer Notes
-### DB Schema
-```mermaid
-erDiagram
-    INVENTORY 
-    INVENTORY {
-        string name
-        string type
-        string location
-        string status
-    }
-```
-### Server Architecture
+If the inventory isn't showing the data you expect, or an item isn't saving correctly, try refreshing the page. If the problem persists, contact your team admin.
 
-Incoming requests travel through a chain of layers, each with a single responsibility:
-
-```
-App -> Routers -> Controllers -> Services -> Models -> DB
-```
-
-**App** (`app.js`) is the entry point. It sets up Express and connects the routers.
-
-**Routers** (`routes/`) define the URL paths (like `GET /api/inventory`) and hand each request off to the right controller.
-
-**Controllers** (`controllers/`) receive the request, call the appropriate service, and send the response back to the client with the right status code (200 for success, 500 if something went wrong).
-
-**Services** (`services/`) contain the business logic. This is where rules like filtering, sorting, or validating data would live.
-
-**Models** (`models/`) are the only layer that talks to the database directly. They contain the SQL queries and return raw results up to the service.
-
-**DB** (`db/db.js`) opens and manages the SQLite database connection.
-
-### Delete Inventory Item
-
-**Route:** `DELETE /api/inventory/:id`
-
-**Success response (200):**
-```json
-{
-  "message": "Cordless Drill has been deleted from the inventory",
-  "deleted": { "id": 1, "name": "Cordless Drill", ... }
-}
-```
-
-**Error responses:**
-| Status | Condition |
-|---|---|
-| 404 | No item with the given `:id` exists in the database |
-| 500 | Unexpected server error |
-
-**Frontend data flow:**
-
-```
-User clicks Delete
-  → handleDeleteClick() closes the dropdown and opens DeleteConfirmModal
-  → User types "DELETE" and clicks Confirm
-  → DeleteConfirmModal calls deleteInventory(id) (DELETE /api/inventory/:id)
-  → On success: onDelete(id) removes the item from useInventory state; modal closes
-  → On failure: onError(msg) sets deleteError in InventoryRow; modal closes; error row renders
-```
+**Team admins:** For database reset and other maintenance operations, see the [Developer Guide](docs/DEVELOPER.md#troubleshooting).

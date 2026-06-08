@@ -1,3 +1,5 @@
+// Express app setup. Registers middleware and mounts route handlers.
+// Entry point is server.js, which calls app.listen().
 import express from 'express';
 import inventoryRouter from './routes/inventoryRoutes.js';
 

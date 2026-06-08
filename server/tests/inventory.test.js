@@ -7,9 +7,11 @@ const mockDeleteInventoryService = jest.fn();
 const mockPatchInventoryService = jest.fn();
 const mockPatchableColumns = [
   'name', 'type', 'area', 'location', 'status',
-  'quantity', 'condition', 'itemImage', 'checkOutBy', 'tags', 'notes'
+  'quantity', 'condition', 'itemImage', 'checkOutBy', 'tags', 'notes',
+  'needsRestock'
 ];
 const mockGetSubteamsService = jest.fn();
+const mockGetTagsService = jest.fn();
 
 await jest.unstable_mockModule('../services/inventoryService.js', () => ({
   getAllInventoryService: mockGetAllInventoryService,
@@ -18,6 +20,7 @@ await jest.unstable_mockModule('../services/inventoryService.js', () => ({
   patchInventoryService: mockPatchInventoryService,
   patchableColumns: mockPatchableColumns,
   getSubteamsService: mockGetSubteamsService,
+  getTagsService: mockGetTagsService,
 }));
 
 // Dynamic imports MUST come after unstable_mockModule
@@ -91,6 +94,58 @@ describe('GET /api/inventory/subteams', () => {
     expect(res.status).toBe(500);
     expect(res.body).toEqual({ error: 'Failed to retrieve subteams' });
     expect(consoleSpy).toHaveBeenCalledWith('Error fetching subteams:', expect.any(Error));
+
+    consoleSpy.mockRestore();
+  });
+});
+
+// ─── GET /api/inventory/tags ─────────────────────────────────────────────────
+
+describe('GET /api/inventory/tags', () => {
+  afterEach(() => jest.resetAllMocks());
+
+  test('200: returns empty array when no items have tags', async () => {
+    mockGetTagsService.mockResolvedValue([]);
+
+    const { default: request } = await import('supertest');
+    const res = await request(app).get('/api/inventory/tags');
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual([]);
+  });
+
+  test('200: returns sorted deduplicated tags for a single item', async () => {
+    // Service returns already-parsed result; we just verify the route passes it through.
+    mockGetTagsService.mockResolvedValue(['battery', 'motor']);
+
+    const { default: request } = await import('supertest');
+    const res = await request(app).get('/api/inventory/tags');
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual(['battery', 'motor']);
+  });
+
+  test('200: deduplicates overlapping tags from multiple items', async () => {
+    // Both items share "motor"; the service deduplicates and sorts before returning.
+    mockGetTagsService.mockResolvedValue(['battery', 'motor', 'power']);
+
+    const { default: request } = await import('supertest');
+    const res = await request(app).get('/api/inventory/tags');
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual(['battery', 'motor', 'power']);
+  });
+
+  test('500: returns error json when service throws', async () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    mockGetTagsService.mockRejectedValue(new Error('DB connection failed'));
+
+    const { default: request } = await import('supertest');
+    const res = await request(app).get('/api/inventory/tags');
+
+    expect(res.status).toBe(500);
+    expect(res.body).toEqual({ error: 'Failed to retrieve tags' });
+    expect(consoleSpy).toHaveBeenCalledWith('Error fetching tags:', expect.any(Error));
 
     consoleSpy.mockRestore();
   });
@@ -450,5 +505,50 @@ describe('PATCH /api/inventory/:id', () => {
     expect(consoleSpy).toHaveBeenCalledWith('Error patching inventory:', expect.any(Error));
 
     consoleSpy.mockRestore();
+  });
+
+  // ── needsRestock toggle ────────────────────────────────────────────────────
+
+  test('200: sets needsRestock to 1 (flag on)', async () => {
+    const flaggedItem = { ...mockInventory[0], needsRestock: 1 };
+    mockPatchInventoryService.mockResolvedValue(flaggedItem);
+
+    const { default: request } = await import('supertest');
+    const res = await request(app).patch('/api/inventory/1').send({ needsRestock: 1 });
+
+    expect(res.status).toBe(200);
+    expect(res.body.needsRestock).toBe(1);
+    const [, updates] = mockPatchInventoryService.mock.calls[0];
+    expect(updates).toHaveProperty('needsRestock', 1);
+  });
+
+  test('200: sets needsRestock to 0 (flag off)', async () => {
+    const unflaggedItem = { ...mockInventory[0], needsRestock: 0 };
+    mockPatchInventoryService.mockResolvedValue(unflaggedItem);
+
+    const { default: request } = await import('supertest');
+    const res = await request(app).patch('/api/inventory/1').send({ needsRestock: 0 });
+
+    expect(res.status).toBe(200);
+    expect(res.body.needsRestock).toBe(0);
+    const [, updates] = mockPatchInventoryService.mock.calls[0];
+    expect(updates).toHaveProperty('needsRestock', 0);
+  });
+
+  test('200: needsRestock flag is preserved when other fields are updated', async () => {
+    // Simulates updating quantity while the item is already flagged.
+    const itemWithFlag = { ...mockInventory[0], quantity: 5, needsRestock: 1 };
+    mockPatchInventoryService.mockResolvedValue(itemWithFlag);
+
+    const { default: request } = await import('supertest');
+    const res = await request(app).patch('/api/inventory/1').send({ quantity: 5 });
+
+    expect(res.status).toBe(200);
+    // The flag value comes from the service/DB — the patch body only touched quantity.
+    expect(res.body.needsRestock).toBe(1);
+    const [, updates] = mockPatchInventoryService.mock.calls[0];
+    // Only quantity was in the patch body, so needsRestock must NOT be in updates.
+    expect(updates).not.toHaveProperty('needsRestock');
+    expect(updates).toHaveProperty('quantity', 5);
   });
 });
