@@ -3,8 +3,8 @@
 This document covers everything you need to set up, run, and extend Spare Pit. For end-user documentation, see the main [README](../README.md).
 
 **Contents**
-1. [Quick Start](#quick-start)
-1. [Deployment](#deployment)
+1. [Remote Deployment (Online)](#remote-deployment-online)
+1. [Local Deployment](#local-ployment)
 1. [Database: Supabase vs. SQLite](#database-supabase-vs-sqlite)
 1. [Server Architecture](#server-architecture)
 1. [API Reference](#api-reference)
