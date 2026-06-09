@@ -17,6 +17,27 @@ This document covers everything you need to set up, run, and extend Spare Pit. F
 [Deployment Guide](https://docs.google.com/document/d/1L76iXOH6ml9GdBn7CURlDEe_7l-3rIdocH12cPhhZ44)
 > This guide covers how to deploy the frontend, backend, and database to be publicly accessible to highschool students.
 
+### Environment Variables for Deployment
+
+Two environment variables must be set on your hosting platforms for the deployed app to work correctly.
+
+**Backend (Render) — set both of these:**
+
+| Variable | Value |
+|---|---|
+| `DATABASE_URL` | Your Supabase Transaction Pooler connection string |
+| `CORS_ORIGIN` | The full URL of your deployed frontend, e.g. `https://your-app.netlify.app` |
+
+`CORS_ORIGIN` tells the server which frontend origin is allowed to make API requests. Without it, browsers will block all requests from the frontend with a CORS error.
+
+**Frontend (Netlify) — set this:**
+
+| Variable | Value |
+|---|---|
+| `VITE_API_BASE` | The full URL of your deployed backend, e.g. `https://your-app.onrender.com` |
+
+`VITE_API_BASE` tells the frontend where to send API requests. Without it, the frontend will try to call `/api/...` on its own URL instead of the backend.
+
 ---
 
 ## Local Deployment
@@ -150,6 +171,7 @@ To run the app with a local SQLite database instead of Supabase:
 | Variable | Required for | Description |
 |---|---|---|
 | `DATABASE_URL` | Supabase mode | Transaction Pooler connection string from Supabase dashboard |
+| `CORS_ORIGIN` | Remote deployment | URL of the deployed frontend; defaults to `http://localhost:5173` |
 
 No environment variables are needed for local SQLite development.
 
