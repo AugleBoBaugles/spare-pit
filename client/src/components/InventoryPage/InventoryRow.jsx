@@ -5,8 +5,9 @@ import ExpandedPanel from './ExpandedPanel';
 
 // Maps a status value to its CSS class for the coloured pill badge.
 function getStatusClass(status) {
-  if (status === 'available') return 'status-available';
-  if (status === 'missing')   return 'status-missing';
+  const s = (status ?? '').toLowerCase();
+  if (s === 'available') return 'status-available';
+  if (s === 'missing')   return 'status-missing';
   return 'status-in-use';
 }
 
@@ -68,7 +69,7 @@ function InventoryRow({ item, isOpen, onToggle, onItemUpdate, onDelete }) {
         <td className="col-muted">{item.location}</td>
         <td>
           <span className={`status-pill ${getStatusClass(item.status)}`}>
-            {item.status}
+            {item.status?.toLowerCase()}
           </span>
         </td>
 

@@ -1,5 +1,7 @@
 // Form state, validation, and submission logic for the Add Item page.
 import { useState } from 'react';
+
+const BASE = import.meta.env.VITE_API_BASE ?? '';
 import { useSubteams } from './useSubteams';
 import { useTags } from './useTags';
 
@@ -62,7 +64,7 @@ export function useAddItemForm(onSuccess) {
 
     setSubmitting(true);
     try {
-      const res = await fetch('/api/inventory', {
+      const res = await fetch(`${BASE}/api/inventory`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

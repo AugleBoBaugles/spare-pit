@@ -1,4 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
+
+const BASE = import.meta.env.VITE_API_BASE ?? '';
 import { filterInventory } from '../../utils/filterInventory';
 import { useInventory } from '../../utils/useInventory';
 import SearchBar from '../SearchBar';
@@ -42,7 +44,7 @@ function InventoryPage() {
     // Fetch tags from the server on first open only.
     if (!tagsLoaded) {
       try {
-        const res = await fetch('/api/inventory/tags');
+        const res = await fetch(`${BASE}/api/inventory/tags`);
         const tags = await res.json();
         setAvailableTags(tags);
         setTagsLoaded(true);
