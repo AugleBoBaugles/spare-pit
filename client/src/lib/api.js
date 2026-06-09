@@ -1,3 +1,5 @@
+const BASE = import.meta.env.VITE_API_BASE ?? '';
+
 // Reads the server's JSON error body and returns its `error` field.
 // Falls back to `fallback` if the body is missing or unparseable.
 async function serverError(response, fallback) {
@@ -11,7 +13,7 @@ async function serverError(response, fallback) {
 
 // Fetches the full inventory list from the server.
 export async function fetchInventory() {
-  const response = await fetch('/api/inventory');
+  const response = await fetch(`${BASE}/api/inventory`);
   if (!response.ok) throw new Error(await serverError(response, 'Failed to fetch inventory'));
   return response.json();
 }
@@ -20,7 +22,7 @@ export async function fetchInventory() {
 // PATCH (vs PUT) means we only send the fields we want to change, not the whole item.
 // `id` identifies which row to update; `fields` is an object of just the changed values.
 export async function patchInventory(id, fields) {
-  const response = await fetch(`/api/inventory/${id}`, {
+  const response = await fetch(`${BASE}/api/inventory/${id}`, {
     method: 'PATCH',
     // Tell the server we're sending JSON, not a form or plain text.
     headers: { 'Content-Type': 'application/json' },
@@ -35,7 +37,7 @@ export async function patchInventory(id, fields) {
 
 // Permanently removes one inventory item from the database.
 export async function deleteInventory(id) {
-  const response = await fetch(`/api/inventory/${id}`, { method: 'DELETE' });
+  const response = await fetch(`${BASE}/api/inventory/${id}`, { method: 'DELETE' });
   if (!response.ok) throw new Error(await serverError(response, 'Failed to delete inventory item'));
   return response.json();
 }

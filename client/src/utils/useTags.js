@@ -3,10 +3,12 @@
 // Fetch failures are silently swallowed — the field still works as a plain text input.
 import { useState, useEffect } from 'react';
 
+const BASE = import.meta.env.VITE_API_BASE ?? '';
+
 export function useTags() {
   const [tags, setTags] = useState([]);
   useEffect(() => {
-    fetch('/api/inventory/tags')
+    fetch(`${BASE}/api/inventory/tags`)
       .then((r) => r.json())
       .then(setTags)
       .catch(() => {});
