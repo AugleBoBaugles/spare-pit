@@ -5,3 +5,9 @@
 .search-bar input {
   max-width: 320px;
 }
+
+@media (max-width: 600px) {
+  .search-bar input {
+    max-width: 100%;
+  }
+}

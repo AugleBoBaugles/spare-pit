@@ -57,6 +57,12 @@
   gap: 12px;
 }
 
+@media (max-width: 600px) {
+  .add-item-page .row-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Textarea height */
 .add-item-page textarea {
   min-height: 88px;

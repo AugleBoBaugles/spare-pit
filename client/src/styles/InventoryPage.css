@@ -87,8 +87,7 @@
   top: calc(100% + 4px);
   left: 0;
   z-index: 110;
-  min-width: 400px;
-  max-width: 640px;
+  width: clamp(200px, 70vw, 400px);
   background: var(--color-bg);
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-md);
@@ -186,6 +185,7 @@
   font-size: 12px;
   font-weight: 500;
   text-transform: capitalize;
+  white-space: nowrap;
 }
 
 .status-available {
@@ -475,4 +475,29 @@
   background: var(--color-error-fg);
   border-color: var(--color-error-fg);
   color: #fff;
+}
+
+@media (max-width: 600px) {
+  /* Hide Type and Location columns — they're still visible in the expanded panel */
+  .inventory-table th:nth-child(2),
+  .inventory-table th:nth-child(3),
+  .inventory-table td:nth-child(2),
+  .inventory-table td:nth-child(3) {
+    display: none;
+  }
+
+  /* Tag filter dropdown: keep left-anchored so it doesn't overflow off-screen */
+  .tag-filter-dropdown {
+    left: 0;
+    right: auto;
+  }
+
+  /* Let the search bar and tag filter button stack if needed */
+  .inventory-controls {
+    flex-wrap: wrap;
+  }
+
+  .inventory-controls .search-bar {
+    flex: 1 1 100%;
+  }
 }
