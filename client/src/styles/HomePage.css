@@ -157,3 +157,22 @@
   background: none;
   color: var(--color-amber-hover);
 }
+
+@media (max-width: 600px) {
+  .home-stats {
+    flex-wrap: wrap;
+  }
+
+  .stat {
+    flex: 1 1 50%;
+    padding: 1rem;
+  }
+
+  .stat:nth-child(2) {
+    border-right: none;
+  }
+
+  .stat:nth-child(-n+2) {
+    border-bottom: 0.5px solid var(--color-border);
+  }
+}

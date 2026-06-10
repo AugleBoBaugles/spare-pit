@@ -243,3 +243,9 @@ hr {
   margin: 0 auto;
   padding: 2rem 1.5rem;
 }
+
+@media (max-width: 600px) {
+  #root {
+    padding: 1.25rem 1rem;
+  }
+}
