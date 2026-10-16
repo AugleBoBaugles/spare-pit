@@ -4,8 +4,8 @@ This document covers everything you need to set up, run, and extend Spare Pit. F
 
 **Contents**
 1. [Remote Deployment (Online)](#remote-deployment-online)
-1. [Local Deployment](#local-ployment)
-1. [Database: Supabase vs. SQLite](#database-supabase-vs-sqlite)
+1. [Local Deployment](#local-deployment)
+1. [Choosing a Database](#choosing-a-database)
 1. [Server Architecture](#server-architecture)
 1. [API Reference](#api-reference)
 1. [Troubleshooting](#troubleshooting)
@@ -19,12 +19,13 @@ This document covers everything you need to set up, run, and extend Spare Pit. F
 
 ### Environment Variables for Deployment
 
-Two environment variables must be set on your hosting platforms for the deployed app to work correctly.
+These environment variables must be set on your hosting platforms for the deployed app to work correctly.
 
-**Backend (Render) — set both of these:**
+**Backend (Render) — set these:**
 
 | Variable | Value |
 |---|---|
+| `DB_CLIENT` | `postgres` |
 | `DATABASE_URL` | Your Supabase Transaction Pooler connection string |
 | `CORS_ORIGIN` | The full URL of your deployed frontend, e.g. `https://your-app.netlify.app` |
 
@@ -58,63 +59,112 @@ cd spare-pit
 
 ### Database Setup
 
-The app supports two database modes. **Choose one before starting the server.**
+Spare Pit runs on either **SQLite** (a single file on one computer) or **PostgreSQL** (Supabase, or a Postgres server you run yourself). You pick one with the `DB_CLIENT` setting in `server/.env`; no code changes are needed. See [Choosing a Database](#choosing-a-database) to decide.
 
----
-
-#### Option A — Supabase (shared cloud database, recommended for team use)
-
-This is the default. All team members connect to the same database, so changes are visible instantly to everyone.
-
-**Step 1 — Create a Supabase project**
-
-1. Sign up or log in at [supabase.com](https://supabase.com)
-2. Click **New project**, give it a name (e.g. `frc-inventory`), and wait for it to provision
-
-**Step 2 — Create the inventory table**
-
-1. In your project, open **SQL Editor → New Query**
-2. Paste the entire contents of [`server/db/supabase-schema.sql`](../server/db/supabase-schema.sql) and click **Run**
-
-**Step 3 — Get your connection string**
-
-1. Go to **Settings → Database → Connection string**
-2. Select the **Transaction pooler** tab
-3. Copy the connection string — it looks like:
-   ```
-   postgresql://postgres.<project-ref>:[YOUR-PASSWORD]@aws-1-<region>.pooler.supabase.com:6543/postgres
-   ```
-
-**Step 4 — Configure the server**
+Start by creating your config file:
 
 ```bash
 cd server
 cp .env.example .env
 ```
 
-Open `server/.env` and paste your connection string as the value of `DATABASE_URL`:
+---
+
+#### Option A — SQLite (simplest; no account or database server)
+
+Everything is stored in one file on the computer running the server. Other devices on the same network can still use the app through that computer. This is the best choice for a team that self-hosts on one machine.
+
+In `server/.env`:
 
 ```env
-DATABASE_URL=postgresql://postgres.xxxx:[YOUR-PASSWORD]@aws-1-us-west-2.pooler.supabase.com:6543/postgres
+DB_CLIENT=sqlite
 ```
 
-**Step 5 — Verify the connection**
+That's it. The database file (`server/db/frc-inventory.db` by default) and its table are created automatically the first time the server starts. To store it somewhere else, set `SQLITE_PATH` (relative to the `server/` folder, or an absolute path).
+
+> **Tip:** If `server/.env` doesn't exist at all, the server also defaults to SQLite.
+
+---
+
+#### Option B — Self-hosted PostgreSQL (your own server or Docker)
+
+Use this if you want a "real" database server you control, e.g. on a school server or NAS.
+
+**Step 1 — Run Postgres.** The quickest way is Docker:
 
 ```bash
-cd server
+docker run -d --name spare-pit-db --restart unless-stopped \
+  -e POSTGRES_USER=spare_pit -e POSTGRES_PASSWORD=change-me -e POSTGRES_DB=spare_pit \
+  -p 5432:5432 -v spare-pit-data:/var/lib/postgresql/data \
+  postgres:16
+```
+
+Or install PostgreSQL directly from [postgresql.org/download](https://www.postgresql.org/download/) and create a database and user for the app.
+
+**Step 2 — Configure the server.** In `server/.env`:
+
+```env
+DB_CLIENT=postgres
+DATABASE_URL=postgresql://spare_pit:change-me@localhost:5432/spare_pit
+```
+
+SSL is turned off automatically for `localhost`. If your Postgres server is on a **different machine**, SSL is on by default; add `DATABASE_SSL=false` if that server doesn't support SSL.
+
+**Step 3 — Initialize.**
+
+```bash
 npm install
 npm run init-db
 ```
 
-A successful run prints `Supabase inventory table verified.` If you see an error, double-check your `DATABASE_URL` and confirm the schema was applied in Step 2.
+The inventory table is created automatically if it doesn't exist. A successful run prints `Postgres inventory table created.` (or `verified.` on later runs).
 
 ---
 
-#### Option B — Local SQLite (no internet required, single-machine only)
+#### Option C — Supabase (hosted PostgreSQL)
 
-Use this when you want to run the app locally without setting up Supabase — useful for frontend development or quick testing. Data lives in a local file and is **not shared between machines**.
+All team members connect to the same cloud database. This is what the [Remote Deployment](#remote-deployment-online) guide uses.
 
-No configuration is needed. See [Local SQLite Development](#local-sqlite-development) for how to switch the app to this mode.
+**Step 1 — Create a Supabase project**
+
+1. Sign up or log in at [supabase.com](https://supabase.com)
+2. Click **New project**, give it a name (e.g. `frc-inventory`), and wait for it to provision
+
+**Step 2 — Get your connection string**
+
+1. Go to **Settings → Database → Connection string**
+2. Select the **Transaction pooler** tab
+3. Copy the connection string. It looks like:
+   ```
+   postgresql://postgres.<project-ref>:[YOUR-PASSWORD]@aws-1-<region>.pooler.supabase.com:6543/postgres
+   ```
+
+**Step 3 — Configure the server.** In `server/.env`:
+
+```env
+DB_CLIENT=postgres
+DATABASE_URL=postgresql://postgres.xxxx:[YOUR-PASSWORD]@aws-1-us-west-2.pooler.supabase.com:6543/postgres
+```
+
+**Step 4 — Initialize**
+
+```bash
+npm install
+npm run init-db
+```
+
+The inventory table is created automatically. If that fails (e.g. permissions), open **SQL Editor → New Query** in Supabase, paste the contents of [`server/db/supabase-schema.sql`](../server/db/supabase-schema.sql), click **Run**, and try again.
+
+---
+
+#### Optional — Load sample data
+
+To fill an empty database with ~30 example tools, parts, and materials (works with any backend):
+
+```bash
+cd server
+npm run seed-db
+```
 
 ---
 
@@ -136,44 +186,40 @@ start.bat
 
 
 
-## Database: Supabase vs. SQLite
+## Choosing a Database
 
-The app ships with two complete database backends. **Supabase (PostgreSQL via `pg`)** is the default for shared, persistent data. **SQLite** is kept as a local-only alternative for development without internet access.
+The server picks its database backend from `server/.env` at startup and prints `Using database: sqlite` or `Using database: postgres`. Switching backends is just a config change; restart the server afterward.
 
-| | Supabase (default) | SQLite (local dev) |
-|---|---|---|
-| Shared across machines | Yes | No |
-| Data persists across restarts | Yes | Yes (local file) |
-| Setup required | Yes (see Quick Start) | None |
-| Connection file | `server/db/db.js` | `server/db/db.sqlite.js` |
-| Model file | `server/models/inventoryModel.supabase.js` | `server/models/inventoryModel.sqlite.js` |
+| | SQLite | Self-hosted Postgres | Supabase |
+|---|---|---|---|
+| Setup | None | Install Postgres or run Docker | Free Supabase account |
+| Internet required | No | No | Yes |
+| Where data lives | One file on the server machine | Your Postgres server | Supabase cloud |
+| Good for | One team, one host computer | Larger setups, existing DB servers | Online deployment (Render/Netlify) |
+| Backups | Copy the `.db` file (with the server stopped) | `pg_dump` | Supabase dashboard |
 
-### Local SQLite Development
-
-To run the app with a local SQLite database instead of Supabase:
-
-1. **Swap the model import** in [`server/services/inventoryService.js`](../server/services/inventoryService.js):
-   ```js
-   // Change this line:
-   import { ... } from '../models/inventoryModel.supabase.js';
-   // To this:
-   import { ... } from '../models/inventoryModel.sqlite.js';
-   ```
-
-2. **No `.env` needed.** The SQLite connection (`db.sqlite.js`) is self-initializing — it creates `server/db/frc-inventory.db` and the inventory table automatically on first use.
-
-3. **Start the server normally.** `npm run dev` or `npm start` from the `server/` directory.
-
-> **Note:** `npm run init-db`, `npm run reset-db`, and `npm run seed-db` all talk to Supabase (they import from the default `db.js`). When running in SQLite mode, skip those scripts — the database is initialized automatically on first connection.
+> **Note:** Switching backends does **not** move your data. Each backend has its own separate inventory.
 
 ### Environment Variables
 
-| Variable | Required for | Description |
+| Variable | Used by | Description |
 |---|---|---|
-| `DATABASE_URL` | Supabase mode | Transaction Pooler connection string from Supabase dashboard |
-| `CORS_ORIGIN` | Remote deployment | URL of the deployed frontend; defaults to `http://localhost:5173` |
+| `DB_CLIENT` | All | `sqlite` or `postgres`. If unset: `postgres` when `DATABASE_URL` is set, otherwise `sqlite`. |
+| `SQLITE_PATH` | SQLite | Database file location, relative to `server/`. Default `db/frc-inventory.db`. |
+| `DATABASE_URL` | Postgres | Connection string (self-hosted or Supabase Transaction Pooler). |
+| `DATABASE_SSL` | Postgres | `true` / `false`. Default: off for `localhost`, on otherwise. |
+| `CORS_ORIGIN` | All | URL of the frontend; defaults to `http://localhost:5173`. |
+| `PORT` | All | Port the API listens on; defaults to `3000`. |
 
-No environment variables are needed for local SQLite development.
+### How the switch works
+
+| | SQLite | Postgres |
+|---|---|---|
+| Connection | `server/db/db.sqlite.js` | `server/db/db.js` |
+| Init / reset | `server/db/initDb.sqlite.js`, `deleteDb.sqlite.js` | `server/db/initDb.js`, `deleteDb.js` |
+| Model (queries) | `server/models/inventoryModel.sqlite.js` | `server/models/inventoryModel.supabase.js` |
+
+`server/db/config.js` reads the environment variables and picks the backend. `server/db/index.js` and `server/models/inventoryModel.js` then load the matching files, so the rest of the code (services, controllers, scripts) imports from those two entry points and never needs to know which database is active. If you add a new query, add it to **both** model files and export it from `inventoryModel.js`.
 
 ### DB Schema
 
@@ -219,7 +265,7 @@ App → Routers → Controllers → Services → Models → DB
 
 **Models** (`models/`) are the only layer that talks to the database directly. They contain the SQL queries and return raw results up to the service.
 
-**DB** (`db/db.js`) opens and manages the database connection.
+**DB** (`db/`) opens and manages the database connection. `db/config.js` chooses SQLite or Postgres. See [How the switch works](#how-the-switch-works).
 
 ---
 
@@ -261,14 +307,20 @@ User clicks Delete
 
 > **Warning:** This will delete ALL the contents of your database. Proceed with caution!
 
-**Supabase (default):** Clears all rows from the cloud inventory table.
 ```bash
+cd server
 npm run reset-db
 ```
 
-**SQLite (local dev):** Deletes and recreates the local database file.
-```bash
-cd server
-node -e "import('./db/deleteDb.sqlite.js').then(m => m.deleteDb())"
-node scripts/initDbScript.js    # re-initialize with SQLite (swap imports first — see Local SQLite Development)
-```
+This works with whichever backend `server/.env` selects. With **Postgres** it clears all rows from the inventory table; with **SQLite** it deletes and recreates the database file. Stop the server first when using SQLite.
+
+### Server won't start
+
+The first line of server output says which database it's using (`Using database: ...`). If it's not the one you expect, check `DB_CLIENT` in `server/.env`.
+
+| Error | Fix |
+|---|---|
+| `DB_CLIENT is "postgres" but DATABASE_URL is not set` | Set `DATABASE_URL`, or set `DB_CLIENT=sqlite`. |
+| `The server does not support SSL connections` | Add `DATABASE_SSL=false` to `server/.env`. |
+| `Postgres inventory table is unavailable` | Check that `DATABASE_URL` is correct and the Postgres server is running. If the user can't create tables, run `server/db/supabase-schema.sql` by hand. |
+| `Invalid DB_CLIENT` | Use exactly `sqlite` or `postgres`. |

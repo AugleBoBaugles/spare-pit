@@ -9,7 +9,7 @@ import {
   updateInventoryItem,
   deleteInventoryById,
   getAllTagStrings,
-} from '../models/inventoryModel.supabase.js';
+} from '../models/inventoryModel.js';
 
 // Columns that controllers are allowed to write via PATCH or POST.
 // id and lastUpdated are excluded: id is auto-generated,

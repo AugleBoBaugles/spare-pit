@@ -1,7 +1,9 @@
 import app from './app.js';
-import { initDb } from './db/initDb.js';
+import { initDb, DB_CLIENT } from './db/index.js';
 
 const PORT = process.env.PORT || 3000;
+
+console.log(`Using database: ${DB_CLIENT}`);
 
 try {
   await initDb();

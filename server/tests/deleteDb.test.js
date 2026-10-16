@@ -13,7 +13,7 @@ afterEach(() => {
   jest.clearAllMocks();
 });
 
-test('deleteDb clears the Supabase inventory table', async () => {
+test('deleteDb clears the Postgres inventory table', async () => {
   mockQuery.mockResolvedValue({ rowCount: 5 });
 
   await expect(deleteDb()).resolves.toBeUndefined();

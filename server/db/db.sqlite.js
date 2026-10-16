@@ -1,21 +1,24 @@
-// SQLite connection — used for local development without a Supabase project.
+// SQLite connection — a local database file, no server or internet required.
 // Self-initializing: creates the database file and inventory table on first connect.
-// See README → "Local SQLite Development" for how to switch the app to this backend.
+// Used when DB_CLIENT=sqlite; see db/config.js and docs/DEVELOPER.md → "Choosing a Database".
 import fs from 'fs';
+import path from 'path';
 import { open } from 'sqlite';
 import sqlite3 from 'sqlite3';
+import { SQLITE_PATH } from './config.js';
 
 let db;
 
 export async function getDb() {
   if (!db) {
-    const dbPath = 'db/frc-inventory.db';
+    const dbPath = SQLITE_PATH;
     const isNew = !fs.existsSync(dbPath);
+    fs.mkdirSync(path.dirname(dbPath), { recursive: true });
 
     db = await open({ filename: dbPath, driver: sqlite3.Database });
 
     if (isNew) {
-      console.log('Creating new local SQLite database...');
+      console.log(`Creating new local SQLite database at ${dbPath}...`);
     }
 
     await db.exec(`

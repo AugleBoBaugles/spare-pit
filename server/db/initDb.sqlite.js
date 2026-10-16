@@ -1,6 +1,6 @@
 // SQLite initializer — delegates to getDb(), which creates the database file
 // and inventory table on first connect via CREATE TABLE IF NOT EXISTS.
-// See docs/DEVELOPER.md → "Local SQLite Development".
+// See docs/DEVELOPER.md → "Choosing a Database".
 import { getDb } from './db.sqlite.js';
 
 export async function initDb() {

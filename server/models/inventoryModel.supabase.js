@@ -1,10 +1,7 @@
-// PostgreSQL data access layer (Supabase via pg driver). All direct database queries live here.
+// PostgreSQL data access layer (Supabase or self-hosted, via pg driver).
+// Selected automatically by inventoryModel.js when DB_CLIENT=postgres.
 // Columns itemImage, checkOutBy, and lastUpdated are camelCase and must be double-quoted
 // in SQL because PostgreSQL folds unquoted identifiers to lowercase.
-//
-// To switch the app to local SQLite instead:
-//   1. In server/services/inventoryService.js, change the model import to inventoryModel.sqlite.js
-//   2. See docs/DEVELOPER.md → "Local SQLite Development" for full instructions
 import { getDb } from '../db/db.js';
 
 // Columns whose names must be double-quoted in SQL to preserve camelCase casing.

@@ -1,5 +1,4 @@
-// Seeds the Supabase inventory table with sample data.
-// Requires DATABASE_URL to be set in server/.env.
+// Seeds the inventory table (SQLite or Postgres, per DB_CLIENT) with sample data.
 // Run with: npm run seed-db
 import { insertInventoryItem } from '../models/inventoryModel.js';
 
@@ -55,7 +54,7 @@ async function seed() {
   console.log(`Database seeding completed. ${seedData.length} items inserted.`);
 }
 
-seed().catch(err => {
+seed().then(() => process.exit(0)).catch(err => {
   console.error('Error occurred while seeding the database:', err);
   process.exit(1);
 });

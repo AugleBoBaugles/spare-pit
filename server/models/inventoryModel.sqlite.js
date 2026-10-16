@@ -1,7 +1,5 @@
-// SQLite data access layer — kept for local development without a Supabase project.
-// To switch the app to SQLite, update the import in inventoryService.js from
-// './inventoryModel.js' to './inventoryModel.sqlite.js' (and update db import below).
-// See README → "Local SQLite Development" for full instructions.
+// SQLite data access layer. Selected automatically by inventoryModel.js when DB_CLIENT=sqlite.
+// See docs/DEVELOPER.md → "Choosing a Database".
 import { getDb } from '../db/db.sqlite.js';
 
 // Returns every row in the inventory table.
