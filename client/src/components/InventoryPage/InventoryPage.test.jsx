@@ -82,8 +82,15 @@ describe('InventoryPage', () => {
     useInventory.mockReturnValue({ data: [], loading: false, error: null })
     render(<InventoryPage />)
 
-    expect(screen.getByText('The inventory database is empty.')).toBeInTheDocument()
+    expect(screen.getByText(/the inventory is empty/i)).toBeInTheDocument()
     expect(screen.queryByRole('table')).not.toBeInTheDocument()
+  })
+
+  it('shows the "Add item" row even when the inventory is empty', () => {
+    useInventory.mockReturnValue({ data: [], loading: false, error: null })
+    render(<InventoryPage />)
+
+    expect(screen.getByPlaceholderText(/add item/i)).toBeInTheDocument()
   })
 })
 

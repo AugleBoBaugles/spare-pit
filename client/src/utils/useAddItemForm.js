@@ -1,4 +1,4 @@
-// Form state, validation, and submission logic for the Add Item page.
+// Form state, validation, and submission logic for the inline "Add item" row.
 import { useState } from 'react';
 
 const BASE = import.meta.env.VITE_API_BASE ?? '';
@@ -11,10 +11,11 @@ const INITIAL_FORM = {
   tags: '', notes: '', itemImage: '',
 };
 
-export function useAddItemForm(onSuccess) {
+// `onCreated(item, possibleDuplicate)` is called after a successful POST with the new item.
+// The form then resets itself, carrying over the fields named in `keepAfterSubmit`.
+export function useAddItemForm(onCreated, { keepAfterSubmit = [] } = {}) {
   const [form, setForm] = useState(INITIAL_FORM);
   const [errors, setErrors] = useState({});
-  const [duplicate, setDuplicate] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
   const subteams = useSubteams();
@@ -51,6 +52,18 @@ export function useAddItemForm(onSuccess) {
     setImagePreview(null);
   }
 
+  // Clears the form. `keep` lists field names whose current values should carry over
+  // (e.g. location, so several items in the same spot can be entered quickly).
+  function reset(keep = []) {
+    setForm(f => {
+      const next = { ...INITIAL_FORM };
+      for (const key of keep) next[key] = f[key];
+      return next;
+    });
+    setErrors({});
+    setImagePreview(null);
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     const next = validate();
@@ -76,13 +89,9 @@ export function useAddItemForm(onSuccess) {
         return;
       }
 
-      const data = await res.json();
-      if (data.possibleDuplicate) {
-        setDuplicate(true);
-        setTimeout(() => onSuccess(), 2500);
-      } else {
-        onSuccess();
-      }
+      const { possibleDuplicate, ...item } = await res.json();
+      reset(keepAfterSubmit);
+      onCreated(item, possibleDuplicate);
     } catch {
       setErrors({ submit: 'Network error — please try again.' });
     } finally {
@@ -91,8 +100,8 @@ export function useAddItemForm(onSuccess) {
   }
 
   return {
-    form, errors, duplicate, submitting, imagePreview,
+    form, errors, submitting, imagePreview,
     subteams, tagSuggestions,
-    handleChange, handleImageChange, clearImage, handleSubmit,
+    handleChange, handleImageChange, clearImage, handleSubmit, reset,
   };
 }

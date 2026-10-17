@@ -477,7 +477,186 @@
   color: #fff;
 }
 
+/* AddItemRow — inline "Add item" row above the table.
+   Collapsed it looks like a table row; once the user types it opens into a card. */
+
+.add-item-section {
+  margin-bottom: 0.75rem;
+}
+
+.add-item {
+  font-size: 14px;
+  border: 0.5px dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+  transition: background var(--transition), border-color var(--transition);
+}
+
+.add-item:hover,
+.add-item:focus-within {
+  border-color: var(--color-text-tertiary);
+}
+
+.add-item--open {
+  border-style: solid;
+  border-color: var(--color-border-strong);
+  background: var(--color-surface);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+}
+
+.add-item__bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+}
+
+.add-item__icon {
+  font-size: 16px;
+  line-height: 1;
+  color: var(--color-text-tertiary);
+}
+
+/* The name input blends into the row — no box of its own */
+.add-item__name,
+.add-item__name:focus {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 10px 0;
+  font-size: 14px;
+  font-weight: 500;
+  outline: none;
+}
+
+.add-item__name-error {
+  display: block;
+  padding: 0 12px 8px 36px;
+}
+
+.add-item__body {
+  padding: 4px 12px 12px;
+  border-top: 0.5px solid var(--color-border);
+}
+
+.add-item__section-label {
+  margin: 12px 0 6px;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-tertiary);
+}
+
+.add-item__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px 12px;
+}
+
+.add-item__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.add-item__field--wide {
+  grid-column: 1 / -1;
+}
+
+.add-item__label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.add-item__req {
+  color: var(--color-error-fg);
+}
+
+.add-item input[aria-invalid="true"],
+.add-item select[aria-invalid="true"] {
+  border-color: var(--color-error-fg);
+}
+
+.add-item__field-error {
+  font-size: 11px;
+  color: var(--color-error-fg);
+}
+
+.add-item__hint {
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+}
+
+.add-item textarea {
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.add-item__image-preview {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.add-item__image-preview img {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  border: 0.5px solid var(--color-border);
+}
+
+.add-item__image-preview button {
+  font-size: 12px;
+  padding: 4px 10px;
+}
+
+.add-item__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.add-item__actions .add-item__hint {
+  margin-right: auto;
+}
+
+.add-item__actions button[type="submit"]:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.add-item__banner--error {
+  margin-top: 10px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  background: var(--color-error-bg);
+  color: var(--color-error-fg);
+}
+
+.add-item__confirm {
+  margin-top: 6px;
+  padding: 0 4px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.add-item__confirm--warn {
+  color: var(--color-warn-fg);
+}
+
 @media (max-width: 600px) {
+  /* Keyboard hint is irrelevant on touch devices */
+  .add-item__actions .add-item__hint {
+    display: none;
+  }
+
   /* Hide Type and Location columns — they're still visible in the expanded panel */
   .inventory-table th:nth-child(2),
   .inventory-table th:nth-child(3),

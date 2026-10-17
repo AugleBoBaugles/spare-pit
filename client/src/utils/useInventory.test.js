@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from '@testing-library/react'
+import { act, renderHook, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { useInventory } from './useInventory'
 
@@ -49,6 +49,18 @@ describe('useInventory', () => {
 
     expect(result.current.error).toBe(mockError)
     expect(result.current.data).toEqual([])
+  })
+
+  it('addItem puts the new item at the top of the list', async () => {
+    fetchInventory.mockResolvedValue(MOCK_TOOLS)
+
+    const { result } = renderHook(() => useInventory())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+
+    const newItem = { id: 3, name: 'Hex Keys', type: 'hand', location: 'Bay 1', status: 'in' }
+    act(() => result.current.addItem(newItem))
+
+    expect(result.current.data).toEqual([newItem, ...MOCK_TOOLS])
   })
 
   it('calls fetchInventory exactly once on mount', async () => {

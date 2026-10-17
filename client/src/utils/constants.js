@@ -1,4 +1,4 @@
-// Shared option lists used across ExpandedPanel and AddItemPage.
+// Shared option lists used across ExpandedPanel and AddItemRow.
 // Keeping them in one place means adding a new type/status/condition
 // only requires a change here.
 

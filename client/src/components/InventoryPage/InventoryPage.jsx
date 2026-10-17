@@ -4,13 +4,15 @@ const BASE = import.meta.env.VITE_API_BASE ?? '';
 import { filterInventory } from '../../utils/filterInventory';
 import { useInventory } from '../../utils/useInventory';
 import SearchBar from '../SearchBar';
+import AddItemRow from './AddItemRow';
 import InventoryRow from './InventoryRow';
 import TagFilterDropdown from './TagFilterDropdown';
 import '../../styles/InventoryPage.css';
 
 function InventoryPage() {
-  // `updateItem` reflects edits; `deleteItem` removes an item — both avoid a full re-fetch.
-  const { data, loading, error, updateItem, deleteItem } = useInventory();
+  // `updateItem` reflects edits, `deleteItem` removes an item and `addItem` inserts a new one —
+  // all avoid a full re-fetch.
+  const { data, loading, error, updateItem, deleteItem, addItem } = useInventory();
   const [searchQuery, setSearchQuery]   = useState('');
   const [expandedId, setExpandedId]     = useState(null);
 
@@ -111,8 +113,10 @@ function InventoryPage() {
         </div>
       </div>
 
+      <AddItemRow onItemAdded={addItem} />
+
       {data.length === 0 ? (
-        <p className="empty-state">The inventory database is empty.</p>
+        <p className="empty-state">The inventory is empty. Type a name above to add your first item.</p>
       ) : filteredData.length === 0 ? (
         <p className="empty-state">No items match the current filters.</p>
       ) : (

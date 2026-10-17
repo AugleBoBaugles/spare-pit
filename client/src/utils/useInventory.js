@@ -26,5 +26,11 @@ export function useInventory() {
     setData((prev) => prev.filter((item) => item.id !== id));
   }
 
-  return { data, loading, error, updateItem, deleteItem };
+  // After a successful POST, put the new item at the top of the list so the user sees it
+  // right away, without a full page re-fetch.
+  function addItem(newItem) {
+    setData((prev) => [newItem, ...prev]);
+  }
+
+  return { data, loading, error, updateItem, deleteItem, addItem };
 }
