@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from 'react';
 
 const BASE = import.meta.env.VITE_API_BASE ?? '';
 import { filterInventory } from '../../utils/filterInventory';
+import { sortInventory } from '../../utils/sortInventory';
 import { useInventory } from '../../utils/useInventory';
 import SearchBar from '../SearchBar';
 import AddItemRow from './AddItemRow';
@@ -9,12 +10,28 @@ import InventoryRow from './InventoryRow';
 import TagFilterDropdown from './TagFilterDropdown';
 import '../../styles/InventoryPage.css';
 
+// Sortable table columns, in display order. A 5th, unlabelled column holds the actions button.
+const COLUMNS = [
+  { field: 'name',     label: 'Name' },
+  { field: 'type',     label: 'Type' },
+  { field: 'location', label: 'Location' },
+  { field: 'status',   label: 'Status' },
+];
+
+// How long a newly added row stays highlighted.
+const HIGHLIGHT_MS = 2000;
+
 function InventoryPage() {
   // `updateItem` reflects edits, `deleteItem` removes an item and `addItem` inserts a new one —
   // all avoid a full re-fetch.
   const { data, loading, error, updateItem, deleteItem, addItem } = useInventory();
   const [searchQuery, setSearchQuery]   = useState('');
   const [expandedId, setExpandedId]     = useState(null);
+
+  // Sort state — the list starts alphabetical by name.
+  const [sort, setSort] = useState({ field: 'name', direction: 'asc' });
+  // Id of the item just added, so its row can be scrolled to and briefly highlighted.
+  const [highlightedId, setHighlightedId] = useState(null);
 
   // Tag filter state
   const [availableTags, setAvailableTags] = useState([]);
@@ -37,6 +54,28 @@ function InventoryPage() {
     document.addEventListener('mousedown', handleOutsideClick);
     return () => document.removeEventListener('mousedown', handleOutsideClick);
   }, [dropdownOpen]);
+
+  // Clear the new-item highlight after a moment.
+  useEffect(() => {
+    if (highlightedId === null) return;
+    const timer = setTimeout(() => setHighlightedId(null), HIGHLIGHT_MS);
+    return () => clearTimeout(timer);
+  }, [highlightedId]);
+
+  // Clicking the active column flips the direction; clicking a new column sorts it A→Z.
+  function handleSortClick(field) {
+    setSort(prev =>
+      prev.field === field
+        ? { field, direction: prev.direction === 'asc' ? 'desc' : 'asc' }
+        : { field, direction: 'asc' }
+    );
+  }
+
+  // The new item lands wherever the current sort puts it, so highlight it to help the user find it.
+  function handleItemAdded(item) {
+    addItem(item);
+    setHighlightedId(item.id);
+  }
 
   async function handleFilterButtonClick() {
     if (dropdownOpen) {
@@ -67,7 +106,11 @@ function InventoryPage() {
   if (loading) return <p>Loading...</p>;
   if (error)   return <p>Error: {error.message}</p>;
 
-  const filteredData = filterInventory(data, searchQuery, activeTags);
+  const filteredData = sortInventory(
+    filterInventory(data, searchQuery, activeTags),
+    sort.field,
+    sort.direction
+  );
 
   // Count how many items carry each tag across the full (unfiltered) dataset.
   const tagCounts = {};
@@ -113,7 +156,7 @@ function InventoryPage() {
         </div>
       </div>
 
-      <AddItemRow onItemAdded={addItem} />
+      <AddItemRow onItemAdded={handleItemAdded} />
 
       {data.length === 0 ? (
         <p className="empty-state">The inventory is empty. Type a name above to add your first item.</p>
@@ -123,10 +166,29 @@ function InventoryPage() {
         <table className="inventory-table">
           <thead>
             <tr>
-              {/* The empty string at the end reserves the 5th column for the three-dot actions button. */}
-              {['Name', 'Type', 'Location', 'Status', ''].map((col) => (
-                <th key={col}>{col}</th>
-              ))}
+              {COLUMNS.map(({ field, label }) => {
+                const isActive = sort.field === field;
+                return (
+                  <th
+                    key={field}
+                    // Tells screen readers which column the table is sorted by, and which way.
+                    aria-sort={isActive ? (sort.direction === 'asc' ? 'ascending' : 'descending') : 'none'}
+                  >
+                    <button
+                      type="button"
+                      className={`sort-btn${isActive ? ' sort-btn--active' : ''}`}
+                      onClick={() => handleSortClick(field)}
+                    >
+                      {label}
+                      <span className="sort-btn__arrow" aria-hidden="true">
+                        {isActive ? (sort.direction === 'asc' ? '▲' : '▼') : ''}
+                      </span>
+                    </button>
+                  </th>
+                );
+              })}
+              {/* Reserves the 5th column for the three-dot actions button. */}
+              <th />
             </tr>
           </thead>
           <tbody>
@@ -135,6 +197,7 @@ function InventoryPage() {
                 key={item.id}
                 item={item}
                 isOpen={expandedId === item.id}
+                isHighlighted={highlightedId === item.id}
                 onToggle={() => handleToggle(item.id)}
                 onItemUpdate={updateItem}
                 // Pass `deleteItem` down so InventoryRow can remove the item after a delete.

@@ -13,7 +13,8 @@ function getStatusClass(status) {
 
 // `onItemUpdate` bubbles edited data up; `onDelete` bubbles the deleted id up — both keep
 // the list in sync without a full re-fetch from the server.
-function InventoryRow({ item, isOpen, onToggle, onItemUpdate, onDelete }) {
+// `isHighlighted` marks a just-added item: the row scrolls into view and flashes briefly.
+function InventoryRow({ item, isOpen, isHighlighted, onToggle, onItemUpdate, onDelete }) {
   // Controls whether the three-dot dropdown is visible.
   const [menuOpen, setMenuOpen] = useState(false);
   // Controls whether ExpandedPanel is in edit mode or read mode.
@@ -24,6 +25,13 @@ function InventoryRow({ item, isOpen, onToggle, onItemUpdate, onDelete }) {
   const [deleteError, setDeleteError] = useState(null);
   // A ref attached to the dropdown container so we can detect clicks outside it.
   const menuRef = useRef(null);
+  // The summary row, so a newly added item can be scrolled into view.
+  const rowRef = useRef(null);
+
+  useEffect(() => {
+    // scrollIntoView is missing in some test environments (jsdom), hence the `?.`.
+    if (isHighlighted) rowRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+  }, [isHighlighted]);
 
   // Close the dropdown when the user clicks anywhere outside of it.
   useEffect(() => {
@@ -54,7 +62,8 @@ function InventoryRow({ item, isOpen, onToggle, onItemUpdate, onDelete }) {
   return (
     <>
       <tr
-        className={`inventory-row ${isOpen ? 'inventory-row--expanded' : ''}`}
+        ref={rowRef}
+        className={`inventory-row ${isOpen ? 'inventory-row--expanded' : ''} ${isHighlighted ? 'inventory-row--new' : ''}`}
         onClick={onToggle}
         // Tells screen readers whether the accordion section below is open.
         aria-expanded={isOpen}

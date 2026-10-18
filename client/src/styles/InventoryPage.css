@@ -26,6 +26,40 @@
   color: var(--color-text-secondary);
 }
 
+/* Sortable column headers — the button fills the cell so the whole header is clickable */
+
+.inventory-table th:has(.sort-btn) {
+  padding: 0;
+}
+
+.sort-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  border-radius: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sort-btn:hover:not(:disabled) {
+  background: none;
+  color: var(--color-text-primary);
+}
+
+.sort-btn--active {
+  color: var(--color-text-primary);
+}
+
+.sort-btn__arrow {
+  font-size: 9px;
+}
+
 .inventory-table tbody tr {
   border-bottom: 0.5px solid var(--color-border);
 }
@@ -161,6 +195,17 @@
 .inventory-row--expanded {
   background: var(--color-surface);
   border-bottom: none;
+}
+
+/* Newly added row — flashes the accent colour, then fades back */
+
+.inventory-row--new {
+  animation: inventory-row-new 2s ease-out;
+}
+
+@keyframes inventory-row-new {
+  0%, 30% { background: color-mix(in srgb, var(--color-accent) 22%, transparent); }
+  100%    { background: transparent; }
 }
 
 /* Col helpers */

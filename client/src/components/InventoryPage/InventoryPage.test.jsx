@@ -94,6 +94,50 @@ describe('InventoryPage', () => {
   })
 })
 
+describe('InventoryPage — sorting', () => {
+  beforeEach(() => vi.clearAllMocks())
+  afterEach(() => vi.restoreAllMocks())
+
+  // Names in the order their rows appear in the table body.
+  function rowNames() {
+    return screen.getAllByRole('button', { expanded: false })
+      .filter(el => el.tagName === 'TR')
+      .map(row => row.querySelector('.col-name').textContent)
+  }
+
+  it('sorts alphabetically by name on load', () => {
+    mockInventoryHook()
+    render(<InventoryPage />)
+
+    expect(rowNames()).toEqual(['Impact Driver', 'Torque Wrench'])
+    expect(screen.getByRole('columnheader', { name: /name/i })).toHaveAttribute('aria-sort', 'ascending')
+  })
+
+  it('reverses the order when the active column header is clicked', async () => {
+    mockInventoryHook()
+    const user = userEvent.setup()
+    render(<InventoryPage />)
+
+    await user.click(screen.getByRole('button', { name: /^name/i }))
+
+    expect(rowNames()).toEqual(['Torque Wrench', 'Impact Driver'])
+    expect(screen.getByRole('columnheader', { name: /name/i })).toHaveAttribute('aria-sort', 'descending')
+  })
+
+  it('sorts by status in workflow order when the Status header is clicked', async () => {
+    mockInventoryHook()
+    const user = userEvent.setup()
+    render(<InventoryPage />)
+
+    await user.click(screen.getByRole('button', { name: /^status/i }))
+
+    // available comes before missing
+    expect(rowNames()).toEqual(['Torque Wrench', 'Impact Driver'])
+    expect(screen.getByRole('columnheader', { name: /status/i })).toHaveAttribute('aria-sort', 'ascending')
+    expect(screen.getByRole('columnheader', { name: /name/i })).toHaveAttribute('aria-sort', 'none')
+  })
+})
+
 describe('InventoryPage — tag filter', () => {
   beforeEach(() => vi.clearAllMocks())
   afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals() })
