@@ -4,6 +4,7 @@ import './styles/global.css';
 import InventoryPage from "./components/InventoryPage/InventoryPage";
 import HomePage from "./components/HomePage";
 import ThemeToggle from "./components/ThemeToggle";
+import ScrollToTop from "./components/ScrollToTop";
 
 const NAV_ITEMS = [
   { id: "home", label: "Home" },
@@ -32,6 +33,8 @@ function App() {
 
       {activePage === "home" && <HomePage onNavigate={setActivePage} />}
       {activePage === "inventory" && <InventoryPage onNavigate={setActivePage} />}
+
+      <ScrollToTop />
     </>
   );
 }
