@@ -4,10 +4,13 @@ import { useState } from 'react';
 const BASE = import.meta.env.VITE_API_BASE ?? '';
 import { useSubteams } from './useSubteams';
 import { useTags } from './useTags';
+import { useLocations, locationError, resolveLocationId } from './useLocations';
 
+// `areaKey` and `locationName` are the Area → Location picker (see LocationFields);
+// both empty means the item has no location, which is the default.
 const INITIAL_FORM = {
   name: '', type: '', status: 'available', checkOutBy: '',
-  area: '', location: '', quantity: 1, condition: '',
+  areaKey: '', locationName: '', quantity: 1, condition: '',
   tags: '', notes: '', itemImage: '',
 };
 
@@ -20,13 +23,15 @@ export function useAddItemForm(onCreated, { keepAfterSubmit = [] } = {}) {
   const [imagePreview, setImagePreview] = useState(null);
   const subteams = useSubteams();
   const tagSuggestions = useTags();
+  const { areas, locations, setLocations } = useLocations();
 
   function validate() {
     const next = {};
     if (!form.name.trim())                              next.name     = 'Item name is required.';
     if (!form.type)                                     next.type     = 'Type is required.';
     if (!form.status)                                   next.status   = 'Status is required.';
-    if (!form.location.trim())                          next.location = 'Location is required.';
+    const locError = locationError(form.areaKey, form.locationName);
+    if (locError)                                       next.location = locError;
     if (form.quantity === '' || form.quantity === null) next.quantity = 'Quantity is required.';
     if (form.tags.trim() && form.tags.split(',').some(t => t.trim() === '')) {
       next.tags = 'Tags must be comma-separated words with no empty segments (e.g. "motor, battery").';
@@ -35,9 +40,14 @@ export function useAddItemForm(onCreated, { keepAfterSubmit = [] } = {}) {
   }
 
   function handleChange(e) {
-    const { name, value } = e.target;
+    setField(e.target.name, e.target.value);
+  }
+
+  // Sets one field and clears its error. The two picker fields share the `location` error.
+  function setField(name, value) {
+    const errorKey = name === 'areaKey' || name === 'locationName' ? 'location' : name;
     setForm(f => ({ ...f, [name]: value }));
-    setErrors(err => ({ ...err, [name]: undefined }));
+    setErrors(err => ({ ...err, [errorKey]: undefined }));
   }
 
   function handleImageChange(e) {
@@ -69,14 +79,29 @@ export function useAddItemForm(onCreated, { keepAfterSubmit = [] } = {}) {
     const next = validate();
     if (Object.keys(next).length) { setErrors(next); return; }
 
-    const payload = {
-      ...form,
-      quantity: Number(form.quantity),
-      checkOutBy: form.status === 'checked-out' ? form.checkOutBy || null : null,
-    };
+    const { areaKey, locationName, ...fields } = form;
 
     setSubmitting(true);
+
+    // A location name that's new in its area is created first, so the item can point at it.
+    let locationId;
     try {
+      const resolved = await resolveLocationId(areaKey, locationName, locations);
+      locationId = resolved.locationId;
+      if (resolved.created) setLocations((prev) => [...prev, resolved.created]);
+    } catch (err) {
+      setErrors({ submit: err.message });
+      setSubmitting(false);
+      return;
+    }
+
+    try {
+      const payload = {
+        ...fields,
+        locationId,
+        quantity: Number(form.quantity),
+        checkOutBy: form.status === 'checked-out' ? form.checkOutBy || null : null,
+      };
       const res = await fetch(`${BASE}/api/inventory`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -101,7 +126,7 @@ export function useAddItemForm(onCreated, { keepAfterSubmit = [] } = {}) {
 
   return {
     form, errors, submitting, imagePreview,
-    subteams, tagSuggestions,
-    handleChange, handleImageChange, clearImage, handleSubmit, reset,
+    subteams, tagSuggestions, areas, locations,
+    handleChange, setField, handleImageChange, clearImage, handleSubmit, reset,
   };
 }

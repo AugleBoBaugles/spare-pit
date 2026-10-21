@@ -100,3 +100,23 @@ describe('filterInventory — tag filter', () => {
     expect(result[0].id).toBe(1);
   });
 });
+
+describe('filterInventory — location filter', () => {
+  const items = [
+    { name: 'Drill',  locationId: 1, location: 'Tool Cabinet A', area: 'Machine Shop' },
+    { name: 'Wrench', locationId: 3, location: 'Tool Cabinet A', area: 'Back Room' },
+    { name: 'Tape',   locationId: null, location: null, area: null },
+  ];
+
+  it('keeps only items at that exact location, even when another has the same name', () => {
+    expect(filterInventory(items, '', [], 3).map(i => i.name)).toEqual(['Wrench']);
+  });
+
+  it('does not filter by location when locationId is null', () => {
+    expect(filterInventory(items, '', [], null)).toHaveLength(3);
+  });
+
+  it('text search matches the area name', () => {
+    expect(filterInventory(items, 'back room').map(i => i.name)).toEqual(['Wrench']);
+  });
+});

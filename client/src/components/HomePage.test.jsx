@@ -8,13 +8,16 @@ import { useInventory } from '../utils/useInventory'
 
 vi.mock('../lib/api', () => ({
   patchInventory: vi.fn(),
+  fetchLocations: vi.fn(),
+  createLocation: vi.fn(),
 }))
-import { patchInventory } from '../lib/api'
+import { patchInventory, fetchLocations, createLocation } from '../lib/api'
 
 const baseItem = {
   id: 1,
   name: 'Cordless Drill',
   type: 'tool',
+  locationId: 1,
   location: 'Tool Cabinet A',
   status: 'available',
   quantity: 2,
@@ -30,6 +33,13 @@ function mockInventory(data, loading = false) {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  fetchLocations.mockResolvedValue({
+    areas: [{ id: 1, name: 'Machine Shop' }, { id: 2, name: 'Back Room' }],
+    locations: [
+      { id: 1, name: 'Tool Cabinet A', areaId: 1, itemCount: 1 },
+      { id: 3, name: 'Tool Cabinet A', areaId: 2, itemCount: 0 },
+    ],
+  })
 })
 
 // ---------------------------------------------------------------------------
@@ -191,5 +201,90 @@ describe('HomePage — restock inline form', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Save' }))
 
     await waitFor(() => expect(mockUpdateItem).toHaveBeenCalledWith(clearedItem))
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Needs a location
+// ---------------------------------------------------------------------------
+
+describe('HomePage — Needs a location section', () => {
+  const loose = { ...baseItem, id: 7, name: 'Spare Bolts', locationId: null, location: null }
+
+  it('shows an all-clear message when every item has a location', () => {
+    mockInventory([baseItem])
+    render(<HomePage />)
+    expect(screen.getByText('Every item has a location.')).toBeInTheDocument()
+  })
+
+  it('lists only items without a location', () => {
+    mockInventory([baseItem, loose])
+    render(<HomePage />)
+    expect(screen.getByText('Spare Bolts')).toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: 'Set location' })).toHaveLength(1)
+  })
+
+  it('saves the chosen location (picking the right same-named one) and passes the item up', async () => {
+    const user = userEvent.setup()
+    const updated = { ...loose, locationId: 3, location: 'Tool Cabinet A', area: 'Back Room' }
+    patchInventory.mockResolvedValue(updated)
+    mockInventory([loose])
+    render(<HomePage />)
+
+    await user.click(screen.getByRole('button', { name: 'Set location' }))
+    await screen.findByRole('option', { name: 'Back Room' })
+    await user.selectOptions(screen.getByLabelText('Area'), 'Back Room')
+    await user.type(screen.getByLabelText('Location'), 'Tool Cabinet A')
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+
+    await waitFor(() => expect(patchInventory).toHaveBeenCalledWith(7, { locationId: 3 }))
+    expect(mockUpdateItem).toHaveBeenCalledWith(updated)
+    expect(createLocation).not.toHaveBeenCalled()
+  })
+
+  it('creates a new location when the typed name is new in that area', async () => {
+    const user = userEvent.setup()
+    createLocation.mockResolvedValue({ id: 50, name: 'Bin 4', areaId: 1, itemCount: 0 })
+    patchInventory.mockResolvedValue({ ...loose, locationId: 50 })
+    mockInventory([loose])
+    render(<HomePage />)
+
+    await user.click(screen.getByRole('button', { name: 'Set location' }))
+    await screen.findByRole('option', { name: 'Machine Shop' })
+    await user.selectOptions(screen.getByLabelText('Area'), 'Machine Shop')
+    await user.type(screen.getByLabelText('Location'), 'Bin 4')
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+
+    await waitFor(() => expect(patchInventory).toHaveBeenCalledWith(7, { locationId: 50 }))
+    expect(createLocation).toHaveBeenCalledWith('Bin 4', 1)
+  })
+
+  it('asks for an area before saving', async () => {
+    const user = userEvent.setup()
+    mockInventory([loose])
+    render(<HomePage />)
+
+    await user.click(screen.getByRole('button', { name: 'Set location' }))
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+
+    expect(screen.getByText(/pick an area, then a location/i)).toBeInTheDocument()
+    expect(patchInventory).not.toHaveBeenCalled()
+  })
+
+  it('shows the server error and keeps the picker open when saving fails', async () => {
+    const user = userEvent.setup()
+    patchInventory.mockRejectedValue(new Error('Failed to update inventory item'))
+    mockInventory([loose])
+    render(<HomePage />)
+
+    await user.click(screen.getByRole('button', { name: 'Set location' }))
+    await screen.findByRole('option', { name: 'Machine Shop' })
+    await user.selectOptions(screen.getByLabelText('Area'), 'Machine Shop')
+    await user.type(screen.getByLabelText('Location'), 'Tool Cabinet A')
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+
+    expect(await screen.findByText('Failed to update inventory item')).toBeInTheDocument()
+    expect(screen.getByLabelText('Area')).toBeInTheDocument()
+    expect(mockUpdateItem).not.toHaveBeenCalled()
   })
 })

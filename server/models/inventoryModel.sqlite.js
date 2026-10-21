@@ -2,10 +2,18 @@
 // See docs/DEVELOPER.md → "Choosing a Database".
 import { getDb } from '../db/db.sqlite.js';
 
+// Items store only a locationId. Each row also gets its location's name, and the id and
+// name of the area that location is in (all null when the item has no location).
+const SELECT_ITEMS = `
+  SELECT i.*, l.name AS location, l.areaId AS areaId, a.name AS area
+  FROM inventory i
+  LEFT JOIN locations l ON l.id = i.locationId
+  LEFT JOIN areas a ON a.id = l.areaId`;
+
 // Returns every row in the inventory table.
 export async function getAllInventory() {
   const db = await getDb();
-  return db.all('SELECT * FROM inventory ORDER BY id ASC');
+  return db.all(`${SELECT_ITEMS} ORDER BY i.id ASC`);
 }
 
 // Case-insensitive name lookup used for duplicate detection on insert.
@@ -13,14 +21,6 @@ export async function getAllInventory() {
 export async function findInventoryByName(name) {
   const db = await getDb();
   return db.get('SELECT * FROM inventory WHERE LOWER(name) = LOWER(?)', name);
-}
-
-// Returns the list of column names for the inventory table.
-// Used to validate incoming fields against the current schema.
-export async function getInventoryColumns() {
-  const db = await getDb();
-  const rows = await db.all('PRAGMA table_info(inventory)');
-  return rows.map(row => row.name);
 }
 
 // Overwrites the given fields on a single row identified by id.
@@ -35,7 +35,7 @@ export async function updateInventoryItem(id, fields) {
     ...values,
     id
   );
-  return db.get('SELECT * FROM inventory WHERE id = ?', id);
+  return db.get(`${SELECT_ITEMS} WHERE i.id = ?`, id);
 }
 
 // Returns all distinct non-empty checkOutBy values.
@@ -52,12 +52,11 @@ export async function insertInventoryItem(item) {
   const db = await getDb();
   const result = await db.run(
     `INSERT INTO inventory
-        (name, type, area, location, status, quantity, condition, itemImage, checkOutBy, tags, notes, needsRestock)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        (name, type, locationId, status, quantity, condition, itemImage, checkOutBy, tags, notes, needsRestock)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     item.name,
     item.type         ?? null,
-    item.area         ?? null,
-    item.location     ?? null,
+    item.locationId   ?? null,
     item.status       ?? null,
     item.quantity     ?? null,
     item.condition    ?? null,
@@ -67,13 +66,13 @@ export async function insertInventoryItem(item) {
     item.notes        ?? null,
     item.needsRestock ?? 0
   );
-  return db.get('SELECT * FROM inventory WHERE id = ?', result.lastID);
+  return db.get(`${SELECT_ITEMS} WHERE i.id = ?`, result.lastID);
 }
 
 // Fetches a single row by primary key. Returns null if the id does not exist.
 export const findInventoryById = async (id) => {
   const db = await getDb();
-  const result = await db.get('SELECT * FROM inventory WHERE id = ?', [id]);
+  const result = await db.get(`${SELECT_ITEMS} WHERE i.id = ?`, [id]);
   return result ?? null;
 };
 

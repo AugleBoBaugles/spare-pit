@@ -7,18 +7,23 @@ function parseTags(tagsStr) {
 }
 
 /*
- * Filters inventory items by text query AND an optional array of active tags.
- * Text search is a case-insensitive substring match across name/type/location/status.
+ * Filters inventory items by text query AND an optional array of active tags AND an
+ * optional locationId (only items at that exact location).
+ * Text search is a case-insensitive substring match across name/type/location/area/status.
  * Tag filter is AND logic: every active tag must appear in the item's tags field.
  * Either filter can be omitted independently.
  */
-export function filterInventory(items, query, activeTags = []) {
+export function filterInventory(items, query, activeTags = [], locationId = null) {
   let result = items;
+
+  if (locationId !== null) {
+    result = result.filter(item => item.locationId === locationId);
+  }
 
   if (query && query.trim() !== '') {
     const normalized = query.toLowerCase().trim();
     result = result.filter(item =>
-      [item.name, item.type, item.location, item.status]
+      [item.name, item.type, item.location, item.area, item.status]
         .some(field => field && field.toLowerCase().includes(normalized))
     );
   }

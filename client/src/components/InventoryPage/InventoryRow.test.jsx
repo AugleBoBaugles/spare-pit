@@ -10,6 +10,9 @@ import { patchInventory, deleteInventory } from '../../lib/api';
 vi.mock('../../lib/api', () => ({
   patchInventory: vi.fn(),
   deleteInventory: vi.fn(),
+  // ExpandedPanel loads locations for the Location field's suggestions.
+  fetchLocations: vi.fn().mockResolvedValue({ areas: [], locations: [] }),
+  createLocation: vi.fn(),
 }));
 
 // ---------------------------------------------------------------------------

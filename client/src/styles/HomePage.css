@@ -176,3 +176,68 @@
     border-bottom: 0.5px solid var(--color-border);
   }
 }
+
+/* ── Needs a location section ── */
+
+.home-unlocated {
+  margin-top: 2rem;
+}
+
+.home-unlocated .attention-item {
+  flex-wrap: wrap;
+}
+
+.unlocated-item__form {
+  flex-basis: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* Area and Location side by side, stacking on narrow screens */
+.unlocated-item__fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 8px 10px;
+}
+
+.unlocated-item__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.unlocated-item__label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.unlocated-item__field select,
+.unlocated-item__field input {
+  padding: 5px 8px;
+  font-size: 13px;
+}
+
+.unlocated-item__hint {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+}
+
+.unlocated-item__field-error {
+  font-size: 11px;
+  color: var(--color-error-fg);
+}
+
+.unlocated-item__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.unlocated-item__actions button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

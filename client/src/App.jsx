@@ -3,16 +3,31 @@ import { useState } from 'react';
 import './styles/global.css';
 import InventoryPage from "./components/InventoryPage/InventoryPage";
 import HomePage from "./components/HomePage";
+import LocationsPage from "./components/LocationsPage/LocationsPage";
 import ThemeToggle from "./components/ThemeToggle";
 import ScrollToTop from "./components/ScrollToTop";
 
 const NAV_ITEMS = [
   { id: "home", label: "Home" },
   { id: "inventory", label: "Inventory" },
+  { id: "locations", label: "Locations" },
 ];
 
 function App() {
   const [activePage, setActivePage] = useState("inventory");
+  // Location the Inventory page opens filtered to — set when a location card is clicked.
+  const [inventoryLocation, setInventoryLocation] = useState(null);
+
+  function navigate(page) {
+    setInventoryLocation(null);
+    setActivePage(page);
+  }
+
+  // `location` is { id, name, area }.
+  function openLocation(location) {
+    setInventoryLocation(location);
+    setActivePage("inventory");
+  }
 
   return (
     <>
@@ -23,7 +38,7 @@ function App() {
         {NAV_ITEMS.map(({ id, label }) => (
           <button
             key={id}
-            onClick={() => setActivePage(id)}
+            onClick={() => navigate(id)}
             className={activePage === id ? "active" : ""}
           >
             {label}
@@ -31,8 +46,9 @@ function App() {
         ))}
       </nav>
 
-      {activePage === "home" && <HomePage onNavigate={setActivePage} />}
-      {activePage === "inventory" && <InventoryPage onNavigate={setActivePage} />}
+      {activePage === "home" && <HomePage onNavigate={navigate} />}
+      {activePage === "inventory" && <InventoryPage onNavigate={navigate} initialLocation={inventoryLocation} />}
+      {activePage === "locations" && <LocationsPage onOpenLocation={openLocation} />}
 
       <ScrollToTop />
     </>

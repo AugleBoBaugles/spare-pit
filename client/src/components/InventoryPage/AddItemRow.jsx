@@ -3,11 +3,12 @@
 // so the item can be created without leaving the page. All form logic lives in useAddItemForm.
 import { useRef, useState } from 'react';
 import { useAddItemForm } from '../../utils/useAddItemForm';
+import LocationFields from '../LocationFields';
 import { ITEM_TYPES, ITEM_STATUSES, ITEM_CONDITIONS } from '../../utils/constants';
 
 // Fields carried over to the next item after a successful add — items are usually
 // entered in batches from the same spot, so this saves retyping.
-const STICKY_FIELDS = ['type', 'location', 'area'];
+const STICKY_FIELDS = ['type', 'areaKey', 'locationName'];
 
 // Label + control + inline error, laid out as one cell of the expanded grid.
 function Field({ id, label, required, error, wide, children }) {
@@ -31,8 +32,8 @@ function AddItemRow({ onItemAdded }) {
 
   const {
     form, errors, submitting, imagePreview,
-    subteams, tagSuggestions,
-    handleChange, handleImageChange, clearImage, handleSubmit, reset,
+    subteams, tagSuggestions, areas, locations,
+    handleChange, setField, handleImageChange, clearImage, handleSubmit, reset,
   } = useAddItemForm((item, possibleDuplicate) => {
     onItemAdded(item);
     setLastAdded({ name: item.name, duplicate: !!possibleDuplicate });
@@ -115,15 +116,6 @@ function AddItemRow({ onItemAdded }) {
                 </select>
               </Field>
 
-              <Field id="add-location" label="Location" required error={errors.location}>
-                <input
-                  id="add-location" name="location" type="text"
-                  value={form.location} onChange={handleChange}
-                  placeholder="e.g. Tool Cabinet A"
-                  aria-invalid={!!errors.location}
-                />
-              </Field>
-
               <Field id="add-quantity" label="Quantity" required error={errors.quantity}>
                 <input
                   id="add-quantity" name="quantity" type="number" min="0"
@@ -161,13 +153,16 @@ function AddItemRow({ onItemAdded }) {
 
             <p className="add-item__section-label">Optional</p>
             <div className="add-item__grid">
-              <Field id="add-area" label="Area">
-                <input
-                  id="add-area" name="area" type="text"
-                  value={form.area} onChange={handleChange}
-                  placeholder="e.g. Machine Shop"
-                />
-              </Field>
+              <LocationFields
+                idPrefix="add"
+                classPrefix="add-item"
+                areaKey={form.areaKey}
+                locationName={form.locationName}
+                onChange={setField}
+                areas={areas}
+                locations={locations}
+                error={errors.location}
+              />
 
               <Field id="add-condition" label="Condition">
                 <select

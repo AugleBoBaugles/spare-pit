@@ -1,6 +1,7 @@
 // Seeds the inventory table (SQLite or Postgres, per DB_CLIENT) with sample data.
 // Run with: npm run seed-db
 import { insertInventoryItem } from '../models/inventoryModel.js';
+import { ensureLocation } from '../services/locationService.js';
 
 const seedData = [
   // Tools
@@ -47,8 +48,10 @@ const seedData = [
 async function seed() {
   console.log('Seeding database with initial inventory data...');
 
-  for (const item of seedData) {
-    await insertInventoryItem({ ...item, lastUpdated: Date.now() });
+  // Each item's area is used to file its location under that area (creating both as needed).
+  for (const { area, location, ...item } of seedData) {
+    const locationId = await ensureLocation(location, area);
+    await insertInventoryItem({ ...item, locationId, lastUpdated: Date.now() });
   }
 
   console.log(`Database seeding completed. ${seedData.length} items inserted.`);

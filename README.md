@@ -5,7 +5,8 @@ Spare Pit is an inventory management app built for FIRST Robotics Competition (F
 Built by [Augy Markham](https://www.linkedin.com/in/augy-markham/) and [Rebecca Riffle](https://www.linkedin.com/in/rebecca-riffle/) at Green River College.
 
 **Features**
-- Browse and search inventory by name, type, location, or status
+- Browse and search inventory by name, type, location, area, or status
+- Organise storage into areas (rooms) and locations (cabinets, shelves, bins) on the Locations tab — drag locations between areas
 - Expand any item to view full details: area, quantity, condition, tags, and notes
 - Edit items inline directly from the inventory list
 - Filter by one or more tags to find items by category
@@ -21,6 +22,7 @@ Built by [Augy Markham](https://www.linkedin.com/in/augy-markham/) and [Rebecca 
 
 **Contents**
 1. [Viewing and Editing Inventory](#viewing-and-editing-inventory)
+1. [Areas and Locations](#areas-and-locations)
 1. [Filtering by Tags](#filtering-by-tags)
 1. [Flagging Items as Needs Restock](#flagging-items-as-needs-restock)
 1. [Deleting an Item](#deleting-an-item)
@@ -56,6 +58,30 @@ Click the row again to collapse it.
 6. Click **Save** to apply your changes, or **Cancel** to discard them and go back to the read view.
 
 If something goes wrong when saving, an error message will appear below the form. Your edits are preserved so you can try again.
+
+### Areas and Locations
+
+Every item can be stored at a **location** (a cabinet, shelf or bin), and every location sits in an **area** (a room or zone, like the Machine Shop). Two areas can each have a location with the same name — "Tool Cabinet A" in the Machine Shop and "Tool Cabinet A" in the Back Room are different places.
+
+#### The Locations tab
+
+The Locations tab shows each area with its locations as cards, and how many items are in each one. Click a card to see just the items stored there in the Inventory tab — click the **Location: …** chip to clear that filter.
+
+Locations that haven't been put in an area yet appear at the top under **Unassigned**.
+
+#### Organising areas and locations
+
+Click **Edit** to start making changes; they save as you go. Click **Done** when you're finished.
+
+- **Move a location:** drag its card onto another area, or use the menu on the card (handy on phones and tablets).
+- **Add:** **+ New area** at the top, or **+ Add location** at the end of an area.
+- **Rename or delete:** use the buttons on an area's heading or a location's card. A location can only be deleted once it's empty; deleting an area moves its locations to Unassigned and never deletes items.
+
+#### Setting an item's location
+
+When adding or editing an item, pick an **Area** first, then a **Location** in it. You can choose an existing location or type a new name to create one in that area. Leave Area set to **None** if the item has no location.
+
+Items without a location are listed under **Needs a location** on the Dashboard. Click **Set location** next to one, pick an area and location, and click **Save**. The item then drops off the list.
 
 ### Filtering by Tags
 

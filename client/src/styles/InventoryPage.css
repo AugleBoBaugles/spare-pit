@@ -218,6 +218,34 @@
   color: var(--color-text-secondary);
 }
 
+/* The location's area, after its name in the Location column */
+.col-area {
+  color: var(--color-text-tertiary);
+}
+
+/* "Location: … ✕" chip shown when the list is filtered to one location */
+.location-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-size: 12px;
+  padding: 5px 6px 5px 10px;
+  background: var(--color-accent);
+  color: var(--color-bg);
+  border-color: var(--color-accent);
+}
+
+.location-filter-chip:hover {
+  background: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+}
+
+.location-filter-chip__x {
+  opacity: 0.7;
+}
+
 .capitalize {
   text-transform: capitalize;
 }
@@ -314,6 +342,11 @@
 
 .expanded-panel--editing {
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+}
+
+.expanded-panel__hint {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
 }
 
 .expanded-panel__field-error {

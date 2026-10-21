@@ -21,11 +21,14 @@ const COLUMNS = [
 // How long a newly added row stays highlighted.
 const HIGHLIGHT_MS = 2000;
 
-function InventoryPage() {
+// `initialLocation` ({ id, name, area }) starts the list filtered to that one location —
+// set when a location card is clicked on the Locations page.
+function InventoryPage({ initialLocation = null }) {
   // `updateItem` reflects edits, `deleteItem` removes an item and `addItem` inserts a new one —
   // all avoid a full re-fetch.
   const { data, loading, error, updateItem, deleteItem, addItem } = useInventory();
   const [searchQuery, setSearchQuery]   = useState('');
+  const [locationFilter, setLocationFilter] = useState(initialLocation);
   const [expandedId, setExpandedId]     = useState(null);
 
   // Sort state — the list starts alphabetical by name.
@@ -107,7 +110,7 @@ function InventoryPage() {
   if (error)   return <p>Error: {error.message}</p>;
 
   const filteredData = sortInventory(
-    filterInventory(data, searchQuery, activeTags),
+    filterInventory(data, searchQuery, activeTags, locationFilter?.id ?? null),
     sort.field,
     sort.direction
   );
@@ -135,6 +138,18 @@ function InventoryPage() {
 
       <div className="inventory-controls">
         <SearchBar value={searchQuery} onChange={setSearchQuery} />
+
+        {locationFilter && (
+          <button
+            type="button"
+            className="location-filter-chip"
+            onClick={() => setLocationFilter(null)}
+            aria-label={`Clear location filter: ${locationFilter.name}`}
+          >
+            Location: {locationFilter.name}{locationFilter.area && ` · ${locationFilter.area}`}
+            <span className="location-filter-chip__x" aria-hidden="true">✕</span>
+          </button>
+        )}
 
         {/* Tag filter button + dropdown, wrapped together so the outside-click handler works. */}
         <div className="tag-filter-wrapper" ref={filterRef}>

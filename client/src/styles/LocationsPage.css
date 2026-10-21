@@ -1,0 +1,358 @@
+/* LocationsPage — areas as headed sections, each with a grid of location cards */
+
+.locations-page {
+  padding: 1rem;
+}
+
+.locations-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.locations-header__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.locations-header__actions button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.locations-summary {
+  margin: 4px 0 1.25rem;
+  font-size: 13px;
+  color: var(--color-text-tertiary);
+}
+
+.locations-summary__warn {
+  color: var(--color-warn-fg);
+}
+
+.locations-hint {
+  margin: -0.5rem 0 1.25rem;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.locations-page .empty-state {
+  font-size: 14px;
+  color: var(--color-text-tertiary);
+  font-style: italic;
+}
+
+.locations-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 1rem;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  background: var(--color-error-bg);
+  color: var(--color-error-fg);
+}
+
+.locations-banner__dismiss {
+  border: none;
+  padding: 0 4px;
+  color: inherit;
+}
+
+.locations-banner__dismiss:hover {
+  background: none;
+  color: inherit;
+  opacity: 0.7;
+}
+
+/* ── Area section ── */
+
+.area {
+  padding: 12px;
+  margin: 0 -12px 1.25rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-lg);
+  transition: background var(--transition), border-color var(--transition);
+}
+
+/* In edit mode every area reads as a container you can drop into */
+.area--editing {
+  border: 1px dashed var(--color-border);
+}
+
+.area--drop {
+  border-color: var(--color-text-tertiary);
+  background: var(--color-surface);
+}
+
+.area--unassigned .area__name {
+  color: var(--color-warn-fg);
+}
+
+.area--new {
+  border: 1px dashed var(--color-border-strong);
+}
+
+.area__header {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin-bottom: 10px;
+  min-height: 28px;
+}
+
+.area__name {
+  font-size: 15px;
+}
+
+.area__count {
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+}
+
+.area__actions {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+/* Quiet text buttons, so the header doesn't get busy */
+.area__action {
+  border: none;
+  padding: 2px 6px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.area__action:hover {
+  background: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+.area__action--danger:hover {
+  background: var(--color-error-bg);
+  color: var(--color-error-fg);
+}
+
+.area__confirm {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  background: var(--color-error-bg);
+  color: var(--color-error-fg);
+}
+
+.area__confirm-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.area__confirm-actions button {
+  font-size: 12px;
+  padding: 4px 10px;
+}
+
+.area__confirm-delete {
+  background: var(--color-error-fg);
+  border-color: var(--color-error-fg);
+  color: #fff;
+}
+
+.area__confirm-delete:hover {
+  background: var(--color-error-fg);
+  color: #fff;
+  opacity: 0.85;
+}
+
+.area__note {
+  margin: -4px 0 10px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.area__empty {
+  font-size: 13px;
+  color: var(--color-text-tertiary);
+  font-style: italic;
+}
+
+.area__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+/* ── Location card ── */
+
+.location-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+  min-height: 76px;
+  padding: 10px 12px;
+  border: 0.5px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 400;
+  text-align: left;
+  letter-spacing: 0;
+  transition: border-color var(--transition), box-shadow var(--transition), opacity var(--transition);
+}
+
+/* View-mode cards are buttons; override the global inverted button hover */
+button.location-card:hover {
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  border-color: var(--color-text-tertiary);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+}
+
+.location-card__name {
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.location-card__meta {
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+}
+
+.location-card--editing {
+  cursor: grab;
+}
+
+.location-card--editing:hover {
+  border-color: var(--color-text-tertiary);
+}
+
+.location-card--dragging {
+  opacity: 0.4;
+}
+
+.location-card__top {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  width: 100%;
+}
+
+.location-card__grip {
+  color: var(--color-text-tertiary);
+  line-height: 1.5;
+  user-select: none;
+}
+
+.location-card__tools {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+}
+
+.location-card__move {
+  flex: 1;
+  min-width: 0;
+  padding: 3px 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.location-card__tool {
+  flex-shrink: 0;
+  border: none;
+  padding: 2px 7px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.location-card__tool:hover:not(:disabled) {
+  background: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+.location-card__tool--danger:hover:not(:disabled) {
+  background: var(--color-error-bg);
+  color: var(--color-error-fg);
+}
+
+.location-card__tool:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* The dashed "+ Add location" tile, styled like the inventory's add-item row */
+.location-card--add {
+  align-items: center;
+  justify-content: center;
+  border-style: dashed;
+  background: transparent;
+  color: var(--color-text-tertiary);
+}
+
+button.location-card--add:hover {
+  background: transparent;
+  color: var(--color-text-primary);
+  box-shadow: none;
+}
+
+.location-card--input {
+  justify-content: center;
+}
+
+/* ── Inline name input ── */
+
+.name-input {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+}
+
+.name-input--compact input {
+  padding: 3px 6px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.name-input--heading {
+  max-width: 320px;
+}
+
+.name-input--heading input {
+  padding: 4px 8px;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+@media (max-width: 600px) {
+  .area__grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 8px;
+  }
+
+  /* No dragging on touch screens — the "Move to" menu does the job */
+  .location-card--editing {
+    cursor: default;
+  }
+
+  .location-card__grip {
+    display: none;
+  }
+
+  .locations-header {
+    flex-wrap: wrap;
+  }
+}

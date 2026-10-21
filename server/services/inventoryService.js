@@ -10,12 +10,14 @@ import {
   deleteInventoryById,
   getAllTagStrings,
 } from '../models/inventoryModel.js';
+import { checkLocationId } from './locationService.js';
 
 // Columns that controllers are allowed to write via PATCH or POST.
 // id and lastUpdated are excluded: id is auto-generated,
 // lastUpdated is always set by the service layer to the current timestamp.
+// An item's location is set by locationId; its location and area names come from that.
 export const patchableColumns = [
-  'name', 'type', 'area', 'location', 'status',
+  'name', 'type', 'locationId', 'status',
   'quantity', 'condition', 'itemImage', 'checkOutBy', 'tags', 'notes', 'needsRestock',
 ];
 
@@ -31,6 +33,7 @@ export async function patchInventoryService(id, updates) {
     err.status = 404;
     throw err;
   }
+  if (updates.locationId !== undefined) await checkLocationId(updates.locationId);
   return updateInventoryItem(id, { ...updates, lastUpdated: Date.now() });
 }
 
@@ -54,6 +57,7 @@ export async function getTagsService() {
 
 // Returns the new item along with any possible duplicate (same name, case-insensitive).
 export async function postInventoryService(item) {
+  if (item.locationId !== undefined) await checkLocationId(item.locationId);
   const possibleDuplicate = await findInventoryByName(item.name);
   const newItem = await insertInventoryItem({ ...item, lastUpdated: Date.now() });
   return { ...newItem, possibleDuplicate: possibleDuplicate ?? null };

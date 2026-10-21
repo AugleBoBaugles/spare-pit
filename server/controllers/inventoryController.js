@@ -56,11 +56,12 @@ export const getSubteams = async (req, res) => {
 };
 
 // POST /api/inventory — add a new inventory item
-// Required body field: name (string). Optional: type, area, location, status,
-// quantity (non-negative integer), condition, itemImage, checkOutBy, tags, notes.
+// Required body field: name (string). Optional: type, locationId (a location's id, or null
+// for no location), status, quantity (non-negative integer), condition, itemImage,
+// checkOutBy, tags, notes.
 export const postTool = async (req, res) => {
   const VALID_FIELDS = [
-    'name', 'type', 'area', 'location', 'status',
+    'name', 'type', 'locationId', 'status',
     'quantity', 'condition', 'itemImage', 'checkOutBy', 'tags', 'notes',
   ];
 
@@ -81,6 +82,7 @@ export const postTool = async (req, res) => {
     res.status(201).json(result);
   } catch (err) {
     if (missingDbConfig(err, res)) return;
+    if (err.status) return res.status(err.status).json({ error: err.message });
     console.error('Error posting tool:', err);
     res.status(500).json({ error: 'Failed to add inventory item' });
   }
@@ -108,8 +110,9 @@ export const deleteTool = async (req, res) => {
 };
 
 // PATCH /api/inventory/:id — update one or more fields on an existing item
-// Body can include any subset of: name, type, area, location, status, quantity,
+// Body can include any subset of: name, type, locationId, status, quantity,
 // condition, itemImage, checkOutBy, tags, notes, needsRestock.
+// (An item's location and area names come from its locationId.)
 export const patchInventory = async (req, res) => {
   const { id } = req.params;
 

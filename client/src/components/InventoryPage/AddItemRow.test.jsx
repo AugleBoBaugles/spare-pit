@@ -3,12 +3,30 @@ import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import AddItemRow from './AddItemRow'
 
-// Returns a fetch stub that handles the two on-mount setup calls (subteams + tags)
-// with empty arrays, and uses `data`/`ok` for any other request (e.g. the POST).
+// Two areas that each have a "Tool Cabinet A", plus one location not in any area.
+const LOCATIONS = {
+  areas: [{ id: 1, name: 'Machine Shop' }, { id: 2, name: 'Back Room' }],
+  locations: [
+    { id: 1, name: 'Tool Cabinet A', areaId: 1, itemCount: 2 },
+    { id: 3, name: 'Tool Cabinet A', areaId: 2, itemCount: 0 },
+    { id: 2, name: 'Loose Shelf', areaId: null, itemCount: 1 },
+  ],
+}
+
+// Returns a fetch stub that handles the on-mount setup calls (subteams + tags with empty
+// arrays, locations with LOCATIONS) and creating a location (returns id 99), and uses
+// `data`/`ok` for any other request (e.g. the item POST).
 function makeFetch(data, { ok = true } = {}) {
-  return vi.fn().mockImplementation((url) => {
+  return vi.fn().mockImplementation((url, opts) => {
     if (url === '/api/inventory/subteams' || url === '/api/inventory/tags') {
       return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+    }
+    if (url === '/api/locations' && opts?.method === 'POST') {
+      const body = JSON.parse(opts.body)
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({ id: 99, ...body, itemCount: 0 }) });
+    }
+    if (url === '/api/locations') {
+      return Promise.resolve({ ok: true, json: () => Promise.resolve(LOCATIONS) });
     }
     return Promise.resolve({ ok, json: () => Promise.resolve(data) });
   });
@@ -22,12 +40,23 @@ async function startAdding(user, name = 'Cordless Drill') {
 async function fillRequired(user) {
   await startAdding(user)
   await user.selectOptions(screen.getByLabelText(/^type/i), 'tool')
-  await user.type(screen.getByLabelText(/^location/i), 'Bay 1')
-  // status defaults to "available", quantity defaults to 1
+  // status defaults to "available", quantity defaults to 1, location defaults to none
 }
 
+// Picks an area (waiting for the areas to load), then types a location name.
+async function pickLocation(user, area, location) {
+  await screen.findByRole('option', { name: area })
+  await user.selectOptions(screen.getByLabelText(/^area/i), area)
+  if (location) await user.type(screen.getByLabelText(/^location/i), location)
+}
+
+// Item POSTs only — creating a location is a POST to /api/locations.
 function postCalls() {
-  return fetch.mock.calls.filter(([, opts]) => opts?.method === 'POST')
+  return fetch.mock.calls.filter(([url, opts]) => opts?.method === 'POST' && url === '/api/inventory')
+}
+
+function locationPosts() {
+  return fetch.mock.calls.filter(([url, opts]) => opts?.method === 'POST' && url === '/api/locations')
 }
 
 describe('AddItemRow', () => {
@@ -54,7 +83,7 @@ describe('AddItemRow', () => {
     const user = userEvent.setup()
     render(<AddItemRow onItemAdded={onItemAdded} />)
     await startAdding(user, 'D')
-    for (const label of [/^type/i, /^location/i, /^quantity/i, /^status/i, /^area/i, /^condition/i, /^tags/i, /^notes/i]) {
+    for (const label of [/^type/i, /^area/i, /^location/i, /^quantity/i, /^status/i, /^condition/i, /^tags/i, /^notes/i]) {
       expect(screen.getByLabelText(label)).toBeInTheDocument()
     }
     // Focus stays in the name field so typing isn't interrupted.
@@ -66,7 +95,7 @@ describe('AddItemRow', () => {
     const user = userEvent.setup()
     render(<AddItemRow onItemAdded={onItemAdded} />)
     await startAdding(user, 'Dr')
-    await user.type(screen.getByLabelText(/^location/i), 'Bay 1')
+    await pickLocation(user, 'Machine Shop', 'Bay 1')
 
     await user.clear(screen.getByLabelText(/item name/i))
     expect(screen.queryByLabelText(/^type/i)).not.toBeInTheDocument()
@@ -91,7 +120,6 @@ describe('AddItemRow', () => {
     await startAdding(user)
     await user.click(screen.getByRole('button', { name: /add item/i }))
     expect(screen.getByText(/type is required/i)).toBeInTheDocument()
-    expect(screen.getByText(/location is required/i)).toBeInTheDocument()
     expect(postCalls()).toHaveLength(0)
   })
 
@@ -100,9 +128,9 @@ describe('AddItemRow', () => {
     render(<AddItemRow onItemAdded={onItemAdded} />)
     await startAdding(user)
     await user.click(screen.getByRole('button', { name: /add item/i }))
-    expect(screen.getByText(/location is required/i)).toBeInTheDocument()
-    await user.type(screen.getByLabelText(/^location/i), 'Bay 1')
-    expect(screen.queryByText(/location is required/i)).not.toBeInTheDocument()
+    expect(screen.getByText(/type is required/i)).toBeInTheDocument()
+    await user.selectOptions(screen.getByLabelText(/^type/i), 'tool')
+    expect(screen.queryByText(/type is required/i)).not.toBeInTheDocument()
   })
 
   it('creates the item, collapses, and refocuses the name field', async () => {
@@ -122,6 +150,7 @@ describe('AddItemRow', () => {
     const user = userEvent.setup()
     render(<AddItemRow onItemAdded={onItemAdded} />)
     await fillRequired(user)
+    await user.click(screen.getByLabelText(/item name/i))
     await user.keyboard('{Enter}')
     await waitFor(() => expect(onItemAdded).toHaveBeenCalled())
   })
@@ -130,11 +159,13 @@ describe('AddItemRow', () => {
     const user = userEvent.setup()
     render(<AddItemRow onItemAdded={onItemAdded} />)
     await fillRequired(user)
+    await pickLocation(user, 'Machine Shop', 'Bay 1')
     await user.click(screen.getByRole('button', { name: /add item/i }))
     await waitFor(() => expect(onItemAdded).toHaveBeenCalled())
 
     await startAdding(user, 'Hex Keys')
     expect(screen.getByLabelText(/^type/i)).toHaveValue('tool')
+    expect(screen.getByLabelText(/^area/i)).toHaveValue('1')
     expect(screen.getByLabelText(/^location/i)).toHaveValue('Bay 1')
     expect(screen.getByLabelText(/^notes/i)).toHaveValue('')
   })
@@ -250,5 +281,86 @@ describe('AddItemRow — tag validation', () => {
     await waitFor(() => expect(onItemAdded).toHaveBeenCalled())
     const body = JSON.parse(postCalls()[0][1].body)
     expect(body.tags).toBe('motor, battery')
+  })
+})
+
+describe('AddItemRow — Area → Location picker', () => {
+  let onItemAdded
+
+  beforeEach(() => {
+    onItemAdded = vi.fn()
+    vi.stubGlobal('fetch', makeFetch({ id: 1, name: 'Cordless Drill', possibleDuplicate: null }))
+  })
+  afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals() })
+
+  async function submit(user) {
+    await user.click(screen.getByRole('button', { name: /add item/i }))
+    await waitFor(() => expect(onItemAdded).toHaveBeenCalled())
+    return JSON.parse(postCalls()[0][1].body)
+  }
+
+  it('defaults to no location, with the Location field disabled', async () => {
+    const user = userEvent.setup()
+    render(<AddItemRow onItemAdded={onItemAdded} />)
+    await fillRequired(user)
+    expect(screen.getByLabelText(/^area/i)).toHaveValue('')
+    expect(screen.getByLabelText(/^location/i)).toBeDisabled()
+
+    const body = await submit(user)
+    expect(body.locationId).toBeNull()
+    expect(locationPosts()).toHaveLength(0)
+  })
+
+  it('sends the id of the matching location in the chosen area', async () => {
+    const user = userEvent.setup()
+    render(<AddItemRow onItemAdded={onItemAdded} />)
+    await fillRequired(user)
+    // "Tool Cabinet A" exists in both areas — Back Room's is id 3.
+    await pickLocation(user, 'Back Room', 'tool cabinet a')
+
+    const body = await submit(user)
+    expect(body.locationId).toBe(3)
+    expect(body).not.toHaveProperty('areaKey')
+    expect(locationPosts()).toHaveLength(0)
+  })
+
+  it('only suggests the chosen area’s locations', async () => {
+    const user = userEvent.setup()
+    render(<AddItemRow onItemAdded={onItemAdded} />)
+    await startAdding(user)
+    await pickLocation(user, 'Not in an area')
+    const options = [...document.getElementById('add-location-options').options].map(o => o.value)
+    expect(options).toEqual(['Loose Shelf'])
+  })
+
+  it('creates a new location in the chosen area, then sends its id', async () => {
+    const user = userEvent.setup()
+    render(<AddItemRow onItemAdded={onItemAdded} />)
+    await fillRequired(user)
+    await pickLocation(user, 'Machine Shop', 'Bay 1')
+    expect(screen.getByText(/new location — it will be added to machine shop/i)).toBeInTheDocument()
+
+    const body = await submit(user)
+    expect(JSON.parse(locationPosts()[0][1].body)).toEqual({ name: 'Bay 1', areaId: 1 })
+    expect(body.locationId).toBe(99)
+  })
+
+  it('requires a location once an area is picked', async () => {
+    const user = userEvent.setup()
+    render(<AddItemRow onItemAdded={onItemAdded} />)
+    await fillRequired(user)
+    await pickLocation(user, 'Machine Shop')
+    await user.click(screen.getByRole('button', { name: /add item/i }))
+    expect(screen.getByText(/pick or type a location in this area/i)).toBeInTheDocument()
+    expect(postCalls()).toHaveLength(0)
+  })
+
+  it('clears the location when the area changes', async () => {
+    const user = userEvent.setup()
+    render(<AddItemRow onItemAdded={onItemAdded} />)
+    await startAdding(user)
+    await pickLocation(user, 'Machine Shop', 'Tool Cabinet A')
+    await user.selectOptions(screen.getByLabelText(/^area/i), 'Back Room')
+    expect(screen.getByLabelText(/^location/i)).toHaveValue('')
   })
 })

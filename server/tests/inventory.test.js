@@ -6,7 +6,7 @@ const mockPostInventoryService = jest.fn();
 const mockDeleteInventoryService = jest.fn();
 const mockPatchInventoryService = jest.fn();
 const mockPatchableColumns = [
-  'name', 'type', 'area', 'location', 'status',
+  'name', 'type', 'locationId', 'status',
   'quantity', 'condition', 'itemImage', 'checkOutBy', 'tags', 'notes',
   'needsRestock'
 ];
@@ -46,8 +46,7 @@ const mockInventory = [
 const validPostBody = {
   name: 'Soldering Iron',
   type: 'tool',
-  area: 'Electronics Lab',
-  location: 'Electronics Bench 1',
+  locationId: 5,
   status: 'available',
   quantity: 3,
   condition: 'good',
@@ -263,6 +262,27 @@ describe('POST /api/inventory', () => {
     expect(res.body.name).toBe('mystery part');
   });
 
+  test('201: passes locationId through to the service', async () => {
+    mockPostInventoryService.mockResolvedValue({ ...mockNewItem, possibleDuplicate: null });
+
+    const { default: request } = await import('supertest');
+    await request(app).post('/api/inventory').send(validPostBody);
+
+    expect(mockPostInventoryService.mock.calls[0][0]).toHaveProperty('locationId', 5);
+  });
+
+  test('400: passes through a service error for an unknown locationId', async () => {
+    mockPostInventoryService.mockRejectedValue(
+      Object.assign(new Error('locationId must be the id of an existing location, or null'), { status: 400 })
+    );
+
+    const { default: request } = await import('supertest');
+    const res = await request(app).post('/api/inventory').send({ name: 'Drill', locationId: 999 });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/locationId/);
+  });
+
   test('201: strips unknown fields from request body before posting', async () => {
     mockPostInventoryService.mockResolvedValue({ ...mockNewItem, possibleDuplicate: null });
 
@@ -413,8 +433,7 @@ describe('PATCH /api/inventory/:id', () => {
   test.each([
     ['name',       'Updated Drill'],
     ['type',       'part'],
-    ['area',       'New Area'],
-    ['location',   'New Location'],
+    ['locationId', 7],
     ['status',     'missing'],
     ['quantity',   5],
     ['condition',  'fair'],

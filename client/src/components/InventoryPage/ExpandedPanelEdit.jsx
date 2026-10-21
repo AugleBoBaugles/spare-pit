@@ -1,5 +1,6 @@
 // Edit-mode form for an inventory item. Receives all state and handlers from ExpandedPanel.
 import { ITEM_TYPES, ITEM_STATUSES, ITEM_CONDITIONS } from '../../utils/constants';
+import LocationFields from '../LocationFields';
 
 // Fields rendered in edit mode — includes summary row fields (name, type, etc.)
 // so the user can change everything, not just the expanded details.
@@ -9,14 +10,14 @@ import { ITEM_TYPES, ITEM_STATUSES, ITEM_CONDITIONS } from '../../utils/constant
 //   options   — renders a <select> with fixed choices
 //   numeric   — renders <input type="number">
 //   multiline — renders a <textarea>
-//   datalist  — renders an <input> with autocomplete suggestions
+//   datalist  — renders an <input> with autocomplete suggestions (from `suggestions[key]`)
 //   showWhen  — function(formState) => bool; field is hidden when false
+//   picker    — renders the Area → Location picker (LocationFields) instead of one field
 export const EDIT_FIELDS = [
   { key: 'name',       label: 'Name',          required: true },
   { key: 'type',       label: 'Type',          required: true, options: ITEM_TYPES },
-  { key: 'location',   label: 'Location',      required: true },
+  { key: 'location',   label: 'Location',      picker: true },
   { key: 'status',     label: 'Status',        required: true, options: ITEM_STATUSES },
-  { key: 'area',       label: 'Area' },
   { key: 'quantity',   label: 'Quantity',       numeric: true },
   { key: 'condition',  label: 'Condition',      options: ITEM_CONDITIONS },
   { key: 'checkOutBy', label: 'Checked out by', datalist: true, showWhen: (f) => f.status === 'checked-out' },
@@ -25,7 +26,9 @@ export const EDIT_FIELDS = [
   { key: 'itemImage',  label: 'Image' },
 ];
 
-function ExpandedPanelEdit({ form, errors, saveError, onChange, onSave, onCancel, subteams, tagSuggestions }) {
+// `suggestions` maps a datalist field's key to its options, e.g. { tags: [...], checkOutBy: [...] }.
+// `areas` and `locations` feed the Area → Location picker.
+function ExpandedPanelEdit({ form, errors, saveError, onChange, onSave, onCancel, suggestions, locations, areas }) {
   return (
     <tr className="expanded-panel-row">
       {/* colSpan=5 spans all columns including the actions column */}
@@ -33,7 +36,19 @@ function ExpandedPanelEdit({ form, errors, saveError, onChange, onSave, onCancel
         <div className="expanded-panel expanded-panel--editing">
           {/* Filter out fields whose showWhen condition is false, then render each field. */}
           {EDIT_FIELDS.filter(({ showWhen }) => !showWhen || showWhen(form)).map(
-            ({ key, label, required, multiline, options, datalist, numeric }) => (
+            ({ key, label, required, multiline, options, datalist, numeric, picker }) => picker ? (
+              <LocationFields
+                key={key}
+                idPrefix="edit"
+                classPrefix="expanded-panel"
+                areaKey={form.areaKey}
+                locationName={form.locationName}
+                onChange={onChange}
+                areas={areas}
+                locations={locations}
+                error={errors.location}
+              />
+            ) : (
               <div key={key} className="expanded-panel__field">
                 {/* htmlFor links the label to its input so clicking the label focuses the field */}
                 <label className="expanded-panel__label" htmlFor={`edit-${key}`}>
@@ -71,7 +86,7 @@ function ExpandedPanelEdit({ form, errors, saveError, onChange, onSave, onCancel
                     {/* <datalist> provides suggestions without restricting free text input */}
                     {datalist && (
                       <datalist id={`edit-${key}-list`}>
-                        {(key === 'tags' ? tagSuggestions : subteams).map((s) => (
+                        {(suggestions[key] ?? []).map((s) => (
                           <option key={s} value={s} />
                         ))}
                       </datalist>

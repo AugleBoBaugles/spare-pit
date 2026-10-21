@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useInventory } from '../utils/useInventory'
 import { patchInventory } from '../lib/api'
+import UnlocatedItems from './UnlocatedItems'
 import '../styles/HomePage.css'
 
 function HomePage() {
@@ -10,6 +11,7 @@ function HomePage() {
   const checkedOut = data.filter(i => i.status === 'checked-out').length
   const attention = data.filter(i => i.status === 'maintenance' || i.status === 'missing')
   const restock = data.filter(i => i.needsRestock)
+  const unlocated = data.filter(i => i.locationId == null)
 
   const [restockingId, setRestockingId] = useState(null)
   const [restockQty, setRestockQty] = useState('')
@@ -117,6 +119,8 @@ function HomePage() {
           </ul>
         )}
       </div>
+
+      <UnlocatedItems items={unlocated} loading={loading} onItemUpdate={updateItem} />
     </div>
   )
 }

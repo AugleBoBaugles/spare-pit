@@ -3,6 +3,7 @@
 import express from 'express';
 import cors from 'cors';
 import inventoryRouter from './routes/inventoryRoutes.js';
+import locationRouter from './routes/locationRoutes.js';
 
 const app = express();
 
@@ -11,6 +12,7 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use('/api', inventoryRouter);
+app.use('/api', locationRouter);
 
 app.get('/', (req, res) => {
   res.send('Welcome to the Spare Pit API!');

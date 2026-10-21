@@ -41,3 +41,51 @@ export async function deleteInventory(id) {
   if (!response.ok) throw new Error(await serverError(response, 'Failed to delete inventory item'));
   return response.json();
 }
+
+// ─── Areas & locations ───────────────────────────────────────────────────────
+
+// Sends a JSON request and returns the parsed response, throwing the server's error message on failure.
+async function sendJson(method, path, body, fallback) {
+  const response = await fetch(`${BASE}${path}`, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+  if (!response.ok) throw new Error(await serverError(response, fallback));
+  return response.json();
+}
+
+// Returns { areas: [{ id, name }], locations: [{ id, name, areaId, itemCount }] }.
+// A location with areaId null hasn't been assigned to an area yet.
+export async function fetchLocations() {
+  const response = await fetch(`${BASE}/api/locations`);
+  if (!response.ok) throw new Error(await serverError(response, 'Failed to fetch locations'));
+  return response.json();
+}
+
+export function createArea(name) {
+  return sendJson('POST', '/api/areas', { name }, 'Failed to create area');
+}
+
+export function renameArea(id, name) {
+  return sendJson('PATCH', `/api/areas/${id}`, { name }, 'Failed to rename area');
+}
+
+// The area's locations are kept and become unassigned.
+export function deleteArea(id) {
+  return sendJson('DELETE', `/api/areas/${id}`, undefined, 'Failed to delete area');
+}
+
+export function createLocation(name, areaId) {
+  return sendJson('POST', '/api/locations', { name, areaId }, 'Failed to create location');
+}
+
+// `fields` may hold `name` (also renames it on every item) and/or `areaId` (null = unassigned).
+export function updateLocation(id, fields) {
+  return sendJson('PATCH', `/api/locations/${id}`, fields, 'Failed to update location');
+}
+
+// Only works for locations with no items; the server refuses otherwise.
+export function deleteLocation(id) {
+  return sendJson('DELETE', `/api/locations/${id}`, undefined, 'Failed to delete location');
+}

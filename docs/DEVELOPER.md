@@ -217,22 +217,40 @@ The server picks its database backend from `server/.env` at startup and prints `
 |---|---|---|
 | Connection | `server/db/db.sqlite.js` | `server/db/db.js` |
 | Init / reset | `server/db/initDb.sqlite.js`, `deleteDb.sqlite.js` | `server/db/initDb.js`, `deleteDb.js` |
-| Model (queries) | `server/models/inventoryModel.sqlite.js` | `server/models/inventoryModel.supabase.js` |
+| Model (queries) | `server/models/inventoryModel.sqlite.js`, `locationModel.sqlite.js` | `server/models/inventoryModel.supabase.js`, `locationModel.supabase.js` |
 
-`server/db/config.js` reads the environment variables and picks the backend. `server/db/index.js` and `server/models/inventoryModel.js` then load the matching files, so the rest of the code (services, controllers, scripts) imports from those two entry points and never needs to know which database is active. If you add a new query, add it to **both** model files and export it from `inventoryModel.js`.
+`server/db/config.js` reads the environment variables and picks the backend. `server/db/index.js`, `server/models/inventoryModel.js` and `server/models/locationModel.js` then load the matching files, so the rest of the code (services, controllers, scripts) imports from those entry points and never needs to know which database is active. If you add a new query, add it to **both** model files and export it from the matching entry point.
 
 ### DB Schema
 
 The Supabase schema is in [`server/db/supabase-schema.sql`](../server/db/supabase-schema.sql). The SQLite schema is embedded in [`server/db/db.sqlite.js`](../server/db/db.sqlite.js).
 
+Areas contain locations, and each item is stored at one location (or none):
+
+- **Area names** are unique, ignoring case.
+- **Location names** only have to be unique *within their area*, so the Machine Shop and the Back Room can each have a "Tool Cabinet A". Locations with no area (`areaId` null) are shown as "Unassigned" and count as one group for uniqueness.
+- **Items** point at a location by `locationId` (null = no location). The API adds the location's name and its area's id and name to every item it returns (`location`, `areaId`, `area`), but only `locationId` is stored.
+
+Older databases stored free-text `area` and `location` columns on each item. On startup, the server migrates them automatically: every distinct area becomes an area, every distinct (area, location) pair becomes a location, each item gets the matching `locationId`, and the old columns are dropped.
+
 ```mermaid
 erDiagram
+    AREAS ||--o{ LOCATIONS : contains
+    LOCATIONS ||--o{ INVENTORY : holds
+    AREAS {
+        int    id
+        string name
+    }
+    LOCATIONS {
+        int    id
+        string name
+        int    areaId
+    }
     INVENTORY {
         int    id
         string name
         string type
-        string area
-        string location
+        int    locationId
         string status
         int    quantity
         string condition
@@ -270,6 +288,20 @@ App → Routers → Controllers → Services → Models → DB
 ---
 
 ## API Reference
+
+### Areas and locations
+
+| Method & path | Body | Notes |
+|---|---|---|
+| `GET /api/locations` | — | `{ areas: [{ id, name }], locations: [{ id, name, areaId, itemCount }] }` |
+| `POST /api/areas` | `{ name }` | 409 if the name is taken |
+| `PATCH /api/areas/:id` | `{ name }` | Rename |
+| `DELETE /api/areas/:id` | — | Its locations become unassigned. 409 if one of them has the same name as an existing unassigned location |
+| `POST /api/locations` | `{ name, areaId }` | `areaId` null = unassigned. 409 if the area already has that name |
+| `PATCH /api/locations/:id` | `{ name?, areaId? }` | Rename and/or move. 409 if the destination area already has that name |
+| `DELETE /api/locations/:id` | — | 409 while any item is stored there |
+
+Items are given a location with `locationId` on `POST /api/inventory` and `PATCH /api/inventory/:id`; an unknown id returns 400. The add-item and edit forms create a new location first (`POST /api/locations`) when the typed name isn't in the chosen area yet.
 
 ### DELETE /api/inventory/:id
 

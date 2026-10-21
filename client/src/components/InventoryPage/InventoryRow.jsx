@@ -75,7 +75,10 @@ function InventoryRow({ item, isOpen, isHighlighted, onToggle, onItemUpdate, onD
       >
         <td className="col-name">{item.name}</td>
         <td className="col-muted capitalize">{item.type}</td>
-        <td className="col-muted">{item.location}</td>
+        <td className="col-muted">
+          {item.location}
+          {item.area && <span className="col-area"> · {item.area}</span>}
+        </td>
         <td>
           <span className={`status-pill ${getStatusClass(item.status)}`}>
             {item.status?.toLowerCase()}
