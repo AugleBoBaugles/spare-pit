@@ -36,8 +36,6 @@ function HomePage() {
 
   return (
     <div className="home-page">
-        <h2>Dashboard</h2>
-
       <div className="home-stats">
         <div className="stat">
           <span className="stat__value">{loading ? '—' : total}</span>
@@ -57,70 +55,72 @@ function HomePage() {
         </div>
       </div>
 
-      <div className="home-attention">
-        <p className="home-section-label">Needs attention</p>
-        {loading ? null : attention.length === 0 ? (
-          <p className="home-empty">All items are accounted for.</p>
-        ) : (
-          <ul className="attention-list">
-            {attention.map(item => (
-              <li key={item.id} className="attention-item">
-                <span className="attention-item__name">{item.name}</span>
-                <span className={`attention-item__badge attention-item__badge--${item.status}`}>
-                  {item.status}
-                </span>
-                {item.location && (
-                  <span className="attention-item__loc">{item.location}</span>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      <div className="home-lists">
+        <div className="home-attention">
+          <p className="home-section-label">Needs attention</p>
+          {loading ? null : attention.length === 0 ? (
+            <p className="home-empty">All items are accounted for.</p>
+          ) : (
+            <ul className="attention-list">
+              {attention.map(item => (
+                <li key={item.id} className="attention-item">
+                  <span className="attention-item__name">{item.name}</span>
+                  <span className={`attention-item__badge attention-item__badge--${item.status}`}>
+                    {item.status}
+                  </span>
+                  {item.location && (
+                    <span className="attention-item__loc">{item.location}</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
 
-      <div className="home-restock">
-        <p className="home-section-label">Needs restock</p>
-        {loading ? null : restock.length === 0 ? (
-          <p className="home-empty">No items are flagged for restock.</p>
-        ) : (
-          <ul className="attention-list">
-            {restock.map(item => (
-              <li key={item.id} className="attention-item">
-                <span className="attention-item__name">{item.name}</span>
-                {item.quantity != null && (
-                  <span className="restock-item__qty">Qty: {item.quantity}</span>
-                )}
-                {item.location && (
-                  <span className="attention-item__loc">{item.location}</span>
-                )}
-                {restockingId === item.id ? (
-                  <div className="restock-item__form">
-                    <input
-                      type="number"
-                      min={0}
-                      className="restock-item__qty-input"
-                      value={restockQty}
-                      onChange={e => setRestockQty(e.target.value)}
-                      autoFocus
-                    />
-                    <button onClick={() => handleRestockConfirm(item)}>Save</button>
-                    <button onClick={() => setRestockingId(null)}>Cancel</button>
-                  </div>
-                ) : (
-                  <button
-                    className="restock-item__clear"
-                    onClick={() => handleRestockOpen(item)}
-                  >
-                    Mark as restocked
-                  </button>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+        <div className="home-restock">
+          <p className="home-section-label">Needs restock</p>
+          {loading ? null : restock.length === 0 ? (
+            <p className="home-empty">No items are flagged for restock.</p>
+          ) : (
+            <ul className="attention-list">
+              {restock.map(item => (
+                <li key={item.id} className="attention-item">
+                  <span className="attention-item__name">{item.name}</span>
+                  {item.quantity != null && (
+                    <span className="restock-item__qty">Qty: {item.quantity}</span>
+                  )}
+                  {item.location && (
+                    <span className="attention-item__loc">{item.location}</span>
+                  )}
+                  {restockingId === item.id ? (
+                    <div className="restock-item__form">
+                      <input
+                        type="number"
+                        min={0}
+                        className="restock-item__qty-input"
+                        value={restockQty}
+                        onChange={e => setRestockQty(e.target.value)}
+                        autoFocus
+                      />
+                      <button onClick={() => handleRestockConfirm(item)}>Save</button>
+                      <button onClick={() => setRestockingId(null)}>Cancel</button>
+                    </div>
+                  ) : (
+                    <button
+                      className="restock-item__clear"
+                      onClick={() => handleRestockOpen(item)}
+                    >
+                      Mark as restocked
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
 
-      <UnlocatedItems items={unlocated} loading={loading} onItemUpdate={updateItem} />
+        <UnlocatedItems items={unlocated} loading={loading} onItemUpdate={updateItem} />
+      </div>
     </div>
   )
 }

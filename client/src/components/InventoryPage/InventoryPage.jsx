@@ -134,8 +134,6 @@ function InventoryPage({ initialLocation = null }) {
 
   return (
     <div className="inventory-page">
-      <h2>Inventory</h2>
-
       <div className="inventory-controls">
         <SearchBar value={searchQuery} onChange={setSearchQuery} />
 

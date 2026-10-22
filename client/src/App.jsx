@@ -8,7 +8,7 @@ import ThemeToggle from "./components/ThemeToggle";
 import ScrollToTop from "./components/ScrollToTop";
 
 const NAV_ITEMS = [
-  { id: "home", label: "Home" },
+  { id: "home", label: "Dashboard" },
   { id: "inventory", label: "Inventory" },
   { id: "locations", label: "Locations" },
 ];
@@ -31,24 +31,30 @@ function App() {
 
   return (
     <>
-      <ThemeToggle />
-      <h1>Spare Pit</h1>
+      <header className="app-header">
+        <h1>Spare Pit</h1>
+      </header>
 
-      <nav>
-        {NAV_ITEMS.map(({ id, label }) => (
-          <button
-            key={id}
-            onClick={() => navigate(id)}
-            className={activePage === id ? "active" : ""}
-          >
-            {label}
-          </button>
-        ))}
-      </nav>
+      <main className="app-main">
+        <div className="app-toolbar">
+          <nav className="app-nav">
+            {NAV_ITEMS.map(({ id, label }) => (
+              <button
+                key={id}
+                onClick={() => navigate(id)}
+                className={activePage === id ? "active" : ""}
+              >
+                {label}
+              </button>
+            ))}
+          </nav>
+          <ThemeToggle />
+        </div>
 
-      {activePage === "home" && <HomePage onNavigate={navigate} />}
-      {activePage === "inventory" && <InventoryPage onNavigate={navigate} initialLocation={inventoryLocation} />}
-      {activePage === "locations" && <LocationsPage onOpenLocation={openLocation} />}
+        {activePage === "home" && <HomePage onNavigate={navigate} />}
+        {activePage === "inventory" && <InventoryPage onNavigate={navigate} initialLocation={inventoryLocation} />}
+        {activePage === "locations" && <LocationsPage onOpenLocation={openLocation} />}
+      </main>
 
       <ScrollToTop />
     </>
