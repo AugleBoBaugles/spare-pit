@@ -82,9 +82,15 @@
 }
 
 /* The SearchBar normally carries its own margin-bottom, but inside the controls
-   row the parent handles spacing, so we cancel it to keep alignment correct. */
+   row the parent handles spacing, so we cancel it to keep alignment correct.
+   It also grows to fill the row so the controls span the full table width. */
 .inventory-controls .search-bar {
+  flex: 1;
   margin-bottom: 0;
+}
+
+.inventory-controls .search-bar input {
+  max-width: none;
 }
 
 /* Tag filter button — slightly smaller than the default button size */
@@ -119,7 +125,7 @@
 .tag-filter-dropdown {
   position: absolute;
   top: calc(100% + 4px);
-  left: 0;
+  right: 0;
   z-index: 110;
   width: clamp(200px, 70vw, 400px);
   background: var(--color-bg);
