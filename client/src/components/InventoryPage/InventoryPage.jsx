@@ -13,7 +13,7 @@ import '../../styles/InventoryPage.css';
 // Sortable table columns, in display order. A 5th, unlabelled column holds the actions button.
 const COLUMNS = [
   { field: 'name',     label: 'Name' },
-  { field: 'type',     label: 'Type' },
+  { field: 'quantity', label: 'Quantity' },
   { field: 'location', label: 'Location' },
   { field: 'status',   label: 'Status' },
 ];

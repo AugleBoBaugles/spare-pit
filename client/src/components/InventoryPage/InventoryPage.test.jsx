@@ -73,7 +73,7 @@ describe('InventoryPage', () => {
     useInventory.mockReturnValue({ data: MOCK_TOOLS, loading: false, error: null })
     render(<InventoryPage />)
 
-    for (const header of ['Name', 'Type', 'Location', 'Status']) {
+    for (const header of ['Name', 'Quantity', 'Location', 'Status']) {
       expect(screen.getByText(header)).toBeInTheDocument()
     }
   })

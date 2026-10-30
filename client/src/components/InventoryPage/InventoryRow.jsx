@@ -74,7 +74,7 @@ function InventoryRow({ item, isOpen, isHighlighted, onToggle, onItemUpdate, onD
         onKeyDown={(e) => e.key === 'Enter' || e.key === ' ' ? onToggle() : null}
       >
         <td className="col-name">{item.name}</td>
-        <td className="col-muted capitalize">{item.type}</td>
+        <td className="col-muted">{item.quantity}</td>
         <td className="col-muted">
           {item.location}
           {item.area && <span className="col-area"> · {item.area}</span>}
