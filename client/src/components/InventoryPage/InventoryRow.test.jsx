@@ -1,10 +1,10 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import InventoryRow from './InventoryRow';
 import ExpandedPanel, { ITEM_FIELDS, FALLBACK } from './ExpandedPanel';
-import { patchInventory, deleteInventory } from '../../lib/api';
+import { patchInventory, deleteInventory, fetchLocations } from '../../lib/api';
 
 // Replace real API calls with mocks so tests never hit the network.
 vi.mock('../../lib/api', () => ({
@@ -471,6 +471,77 @@ describe('InventoryRow — delete action', () => {
     expect(onDelete).not.toHaveBeenCalled();
     // The inline error row should now be visible below the affected item.
     expect(screen.getByText(/failed to delete/i)).toBeInTheDocument();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Move action
+// ---------------------------------------------------------------------------
+
+describe('InventoryRow — move action', () => {
+  // The drill sits in Tool Cabinet A (id 10) in the Machine Shop (id 1).
+  const movableItem = { ...baseItem, locationId: 10, areaId: 1 };
+  const locationData = {
+    areas: [{ id: 1, name: 'Machine Shop' }, { id: 2, name: 'Storage Room' }],
+    locations: [
+      { id: 10, name: 'Tool Cabinet A', areaId: 1, itemCount: 1 },
+      { id: 11, name: 'Workbench', areaId: 1, itemCount: 0 },
+      { id: 20, name: 'Shelf 3', areaId: 2, itemCount: 0 },
+    ],
+  };
+
+  // Opens the row menu, clicks Move, and returns the dialog once locations have loaded.
+  async function openMoveModal(props = {}) {
+    fetchLocations.mockResolvedValueOnce(locationData);
+    renderRow({ item: movableItem, isOpen: false, onToggle: vi.fn(), ...props });
+    await userEvent.click(screen.getByRole('button', { name: 'Row actions' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Move' }));
+    const dialog = screen.getByRole('dialog');
+    await within(dialog).findByRole('button', { name: /tool cabinet a/i });
+    return dialog;
+  }
+
+  it('opens a dialog showing the item name and its current location', async () => {
+    const dialog = await openMoveModal();
+
+    expect(within(dialog).getByRole('heading', { name: 'Move Cordless Drill' })).toBeInTheDocument();
+    expect(within(dialog).getByText('Currently in: Tool Cabinet A · Machine Shop')).toBeInTheDocument();
+  });
+
+  it("starts with the item's area expanded, its current location disabled, and Move disabled", async () => {
+    const dialog = await openMoveModal();
+
+    expect(within(dialog).getByRole('button', { name: /machine shop/i })).toHaveAttribute('aria-expanded', 'true');
+    expect(within(dialog).getByRole('button', { name: /storage room/i })).toHaveAttribute('aria-expanded', 'false');
+    expect(within(dialog).getByRole('button', { name: /tool cabinet a/i })).toBeDisabled();
+    expect(within(dialog).getByRole('button', { name: 'Move' })).toBeDisabled();
+  });
+
+  it('expanding another area and picking a location moves the item there', async () => {
+    const onItemUpdate = vi.fn();
+    const updatedItem = { ...movableItem, locationId: 20, location: 'Shelf 3', areaId: 2, area: 'Storage Room' };
+    patchInventory.mockResolvedValueOnce(updatedItem);
+    const dialog = await openMoveModal({ onItemUpdate });
+
+    await userEvent.click(within(dialog).getByRole('button', { name: /storage room/i }));
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Shelf 3' }));
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Move' }));
+
+    await waitFor(() => expect(patchInventory).toHaveBeenCalledWith(movableItem.id, { locationId: 20 }));
+    expect(onItemUpdate).toHaveBeenCalledWith(updatedItem);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('keeps the dialog open and shows the error when the move fails', async () => {
+    const onItemUpdate = vi.fn();
+    patchInventory.mockRejectedValueOnce(new Error('Location not found'));
+    const dialog = await openMoveModal({ onItemUpdate });
+
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Workbench' }));
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Move' }));
+
+    expect(await within(dialog).findByText('Location not found')).toBeInTheDocument();
+    expect(onItemUpdate).not.toHaveBeenCalled();
   });
 });
 

@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import DeleteConfirmModal from './DeleteConfirmModal';
 import ExpandedPanel from './ExpandedPanel';
+import MoveItemModal from './MoveItemModal';
 
 // Maps a status value to its CSS class for the coloured pill badge.
 function getStatusClass(status) {
@@ -21,6 +22,8 @@ function InventoryRow({ item, isOpen, isHighlighted, onToggle, onItemUpdate, onD
   const [isEditing, setIsEditing] = useState(false);
   // Controls whether the delete confirmation modal is visible.
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  // Controls whether the move-to-location modal is visible.
+  const [showMoveModal, setShowMoveModal] = useState(false);
   // Holds an error message if a delete request fails; shown inline below the row.
   const [deleteError, setDeleteError] = useState(null);
   // A ref attached to the dropdown container so we can detect clicks outside it.
@@ -51,6 +54,12 @@ function InventoryRow({ item, isOpen, isHighlighted, onToggle, onItemUpdate, onD
     // If the row is collapsed, expand it first so the panel is visible before edit mode opens.
     if (!isOpen) onToggle();
     setIsEditing(true);
+  }
+
+  // Called when the user clicks "Move" in the dropdown.
+  function handleMoveClick() {
+    setMenuOpen(false);
+    setShowMoveModal(true);
   }
 
   // Called when the user clicks "Delete" in the dropdown.
@@ -111,6 +120,9 @@ function InventoryRow({ item, isOpen, isHighlighted, onToggle, onItemUpdate, onD
                   <button role="menuitem" onClick={handleEditClick}>Edit</button>
                 </li>
                 <li role="none">
+                  <button role="menuitem" onClick={handleMoveClick}>Move</button>
+                </li>
+                <li role="none">
                   <button role="menuitem" className="btn-delete" onClick={handleDeleteClick}>Delete</button>
                 </li>
               </ul>
@@ -158,6 +170,16 @@ function InventoryRow({ item, isOpen, isHighlighted, onToggle, onItemUpdate, onD
           onClose={() => setShowDeleteModal(false)}
           onDelete={onDelete}
           onError={(msg) => setDeleteError(msg)}
+        />
+      )}
+
+      {/* MoveItemModal also portals to document.body. A successful move goes through
+          onItemUpdate, so the row's location (and any location filter) updates instantly. */}
+      {showMoveModal && (
+        <MoveItemModal
+          item={item}
+          onClose={() => setShowMoveModal(false)}
+          onItemUpdate={onItemUpdate}
         />
       )}
     </>
