@@ -17,6 +17,9 @@ function App() {
   const [activePage, setActivePage] = useState("inventory");
   // Location the Inventory page opens filtered to — set when a location card is clicked.
   const [inventoryLocation, setInventoryLocation] = useState(null);
+  // Area last selected on the Locations page, so coming back from a location's items
+  // lands on the same area (null = Unassigned, undefined = the first area).
+  const [locationsAreaId, setLocationsAreaId] = useState(undefined);
 
   function navigate(page) {
     setInventoryLocation(null);
@@ -53,7 +56,13 @@ function App() {
 
         {activePage === "home" && <HomePage onNavigate={navigate} />}
         {activePage === "inventory" && <InventoryPage onNavigate={navigate} initialLocation={inventoryLocation} />}
-        {activePage === "locations" && <LocationsPage onOpenLocation={openLocation} />}
+        {activePage === "locations" && (
+          <LocationsPage
+            onOpenLocation={openLocation}
+            initialAreaId={locationsAreaId}
+            onSelectArea={setLocationsAreaId}
+          />
+        )}
       </main>
 
       <ScrollToTop />

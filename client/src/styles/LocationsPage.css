@@ -1,4 +1,4 @@
-/* LocationsPage — areas as headed sections, each with a grid of location cards */
+/* LocationsPage — a list of areas down the side, the selected area's locations as a grid of small boxes */
 
 .locations-page {
   padding: 1rem;
@@ -68,32 +68,96 @@
   opacity: 0.7;
 }
 
-/* ── Area section ── */
+/* ── Layout: area list beside the selected area ── */
 
-.area {
-  padding: 12px;
-  margin: 0 -12px 1.25rem;
+.locations-layout {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+/* ── Area list ── */
+
+.area-list {
+  position: sticky;
+  top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.area-list__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 10px;
   border: 1px solid transparent;
-  border-radius: var(--radius-lg);
-  transition: background var(--transition), border-color var(--transition);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 400;
+  text-align: left;
+  letter-spacing: 0;
+  color: var(--color-text-secondary);
 }
 
-/* In edit mode every area reads as a container you can drop into */
-.area--editing {
-  border: 1px dashed var(--color-border);
+/* Override the global inverted button hover with a quiet one */
+.area-list__item:hover {
+  background: var(--color-border);
+  color: var(--color-text-primary);
 }
 
-.area--drop {
-  border-color: var(--color-text-tertiary);
+.area-list__item--selected,
+.area-list__item--selected:hover {
   background: var(--color-surface);
+  border-color: var(--color-border-strong);
+  color: var(--color-text-primary);
+  font-weight: 500;
 }
 
-.area--unassigned .area__name {
+/* Unassigned sits apart at the bottom, in the warning colour */
+.area-list__item--unassigned {
+  margin-top: 6px;
   color: var(--color-warn-fg);
 }
 
-.area--new {
+.area-list__item--unassigned:hover,
+.area-list__item--unassigned.area-list__item--selected {
+  color: var(--color-warn-fg);
+}
+
+/* While a card is being dragged, every entry reads as somewhere it can go */
+.area-list--dragging .area-list__item {
   border: 1px dashed var(--color-border-strong);
+}
+
+.area-list--dragging .area-list__item.area-list__item--drop {
+  border-style: solid;
+  border-color: var(--color-text-primary);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+}
+
+.area-list__name {
+  overflow-wrap: anywhere;
+}
+
+.area-list__count {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+}
+
+.area-list__new {
+  margin-top: 4px;
+}
+
+/* ── Selected area ── */
+
+.area--unassigned .area__name {
+  color: var(--color-warn-fg);
 }
 
 .area__header {
@@ -181,6 +245,7 @@
 }
 
 .area__empty {
+  grid-column: 1 / -1;
   font-size: 13px;
   color: var(--color-text-tertiary);
   font-style: italic;
@@ -188,32 +253,33 @@
 
 .area__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
 }
 
-/* ── Location card ── */
+/* ── Location box ── */
 
 .location-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 6px;
-  min-height: 76px;
-  padding: 10px 12px;
+  gap: 2px;
+  min-height: 56px;
+  padding: 8px 10px;
   border: 0.5px solid var(--color-border-strong);
   border-radius: var(--radius-md);
   background: var(--color-surface);
   color: var(--color-text-primary);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 400;
   text-align: left;
   letter-spacing: 0;
   transition: border-color var(--transition), box-shadow var(--transition), opacity var(--transition);
 }
 
-/* View-mode cards are buttons; override the global inverted button hover */
+/* View-mode boxes are buttons; override the global inverted button hover */
 button.location-card:hover {
   background: var(--color-surface);
   color: var(--color-text-primary);
@@ -222,7 +288,10 @@ button.location-card:hover {
 }
 
 .location-card__name {
+  flex: 1;
+  min-width: 0;
   font-weight: 500;
+  line-height: 1.35;
   overflow-wrap: anywhere;
 }
 
@@ -246,52 +315,14 @@ button.location-card:hover {
 .location-card__top {
   display: flex;
   align-items: flex-start;
-  gap: 6px;
+  gap: 4px;
   width: 100%;
 }
 
 .location-card__grip {
   color: var(--color-text-tertiary);
-  line-height: 1.5;
+  line-height: 1.35;
   user-select: none;
-}
-
-.location-card__tools {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  width: 100%;
-}
-
-.location-card__move {
-  flex: 1;
-  min-width: 0;
-  padding: 3px 6px;
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.location-card__tool {
-  flex-shrink: 0;
-  border: none;
-  padding: 2px 7px;
-  font-size: 13px;
-  color: var(--color-text-secondary);
-}
-
-.location-card__tool:hover:not(:disabled) {
-  background: var(--color-border);
-  color: var(--color-text-primary);
-}
-
-.location-card__tool--danger:hover:not(:disabled) {
-  background: var(--color-error-bg);
-  color: var(--color-error-fg);
-}
-
-.location-card__tool:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
 }
 
 /* The dashed "+ Add location" tile, styled like the inventory's add-item row */
@@ -313,6 +344,88 @@ button.location-card--add:hover {
   justify-content: center;
 }
 
+/* ── ⋯ menu on a location box ── */
+
+.location-menu {
+  flex-shrink: 0;
+  margin: -4px -6px 0 0;
+}
+
+.location-menu__toggle {
+  border: none;
+  padding: 0 6px;
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--color-text-secondary);
+}
+
+.location-menu__toggle:hover,
+.location-menu__toggle[aria-expanded="true"] {
+  background: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+.location-menu__popup {
+  position: absolute;
+  top: calc(100% - 4px);
+  right: 4px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  min-width: 180px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 4px;
+  border: 0.5px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+  cursor: default;
+}
+
+.location-menu__item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  border: none;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-weight: 400;
+  text-align: left;
+  letter-spacing: 0;
+}
+
+.location-menu__item:hover:not(:disabled),
+.location-menu__item:focus-visible {
+  background: var(--color-border);
+  color: var(--color-text-primary);
+  outline: none;
+}
+
+.location-menu__item--danger:hover:not(:disabled) {
+  background: var(--color-error-bg);
+  color: var(--color-error-fg);
+}
+
+.location-menu__item:disabled {
+  color: var(--color-text-tertiary);
+  cursor: not-allowed;
+}
+
+.location-menu__hint {
+  font-size: 11px;
+}
+
+.location-menu__label {
+  margin-top: 4px;
+  padding: 6px 10px 2px;
+  border-top: 0.5px solid var(--color-border);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-tertiary);
+}
+
 /* ── Inline name input ── */
 
 .name-input {
@@ -323,7 +436,7 @@ button.location-card--add:hover {
 
 .name-input--compact input {
   padding: 3px 6px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
 }
 
@@ -337,13 +450,44 @@ button.location-card--add:hover {
   font-weight: 500;
 }
 
+/* Phones: the area list becomes a row of pills above the boxes, scrolling sideways */
 @media (max-width: 600px) {
-  .area__grid {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 8px;
+  .locations-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
   }
 
-  /* No dragging on touch screens — the "Move to" menu does the job */
+  .area-list {
+    position: static;
+    flex-direction: row;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .area-list__item {
+    width: auto;
+    flex-shrink: 0;
+    white-space: nowrap;
+    border-color: var(--color-border);
+    border-radius: 999px;
+  }
+
+  .area-list__item--unassigned {
+    margin-top: 0;
+  }
+
+  .area-list__new {
+    flex-shrink: 0;
+    min-width: 160px;
+    margin-top: 0;
+  }
+
+  .area__grid {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  }
+
+  /* No dragging on touch screens — the ⋯ menu does the job */
   .location-card--editing {
     cursor: default;
   }
@@ -356,3 +500,4 @@ button.location-card--add:hover {
     flex-wrap: wrap;
   }
 }
+

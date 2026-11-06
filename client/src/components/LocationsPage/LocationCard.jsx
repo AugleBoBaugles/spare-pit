@@ -1,9 +1,10 @@
-// One location tile inside an area's grid.
+// One small location box inside an area's grid.
 // View mode: a button showing the name and item count; clicking it calls onOpen(location)
 // to show the inventory filtered to that location.
-// Edit mode: draggable between areas, with a "Move to" menu (for touch screens and
-// keyboards, where dragging isn't available), rename, and delete (only when empty).
+// Edit mode: the same size box, draggable onto an area in the area list, with a ⋯ menu
+// for rename, delete (only when empty), and "Move to" (for touch screens and keyboards).
 import { useState } from 'react';
+import LocationMenu from './LocationMenu';
 import NameInput from './NameInput';
 
 function itemCountLabel(count) {
@@ -15,7 +16,7 @@ function LocationCard({
   onOpen, onDragStart, onDragEnd, onMove, onRename, onDelete,
 }) {
   const [renaming, setRenaming] = useState(false);
-  const { id, name, areaId, itemCount } = location;
+  const { id, name, itemCount } = location;
 
   if (!editing) {
     return (
@@ -58,42 +59,20 @@ function LocationCard({
             onCancel={() => setRenaming(false)}
           />
         ) : (
-          <span className="location-card__name">{name}</span>
+          <>
+            <span className="location-card__name">{name}</span>
+            <LocationMenu
+              location={location}
+              areas={areas}
+              onRename={() => setRenaming(true)}
+              onDelete={() => onDelete(id)}
+              onMove={(areaId) => onMove(id, areaId)}
+            />
+          </>
         )}
       </div>
 
       <span className="location-card__meta">{itemCountLabel(itemCount)}</span>
-
-      <div className="location-card__tools">
-        <select
-          className="location-card__move"
-          aria-label={`Move ${name} to area`}
-          value={areaId ?? ''}
-          onChange={(e) => onMove(id, e.target.value === '' ? null : Number(e.target.value))}
-        >
-          {areas.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
-          <option value="">Unassigned</option>
-        </select>
-        <button
-          type="button"
-          className="location-card__tool"
-          aria-label={`Rename ${name}`}
-          title="Rename"
-          onClick={() => setRenaming(true)}
-        >
-          ✎
-        </button>
-        <button
-          type="button"
-          className="location-card__tool location-card__tool--danger"
-          aria-label={`Delete ${name}`}
-          title={itemCount > 0 ? 'Move or delete its items before deleting this location' : 'Delete'}
-          disabled={itemCount > 0}
-          onClick={() => onDelete(id)}
-        >
-          ✕
-        </button>
-      </div>
     </div>
   );
 }

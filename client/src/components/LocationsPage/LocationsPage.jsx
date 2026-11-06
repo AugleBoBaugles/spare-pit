@@ -1,6 +1,7 @@
-// Locations tab. Shows every area as a heading with a grid of its locations.
-// "Edit" switches on managing them: drag locations between areas (or use each card's
-// "Move to" menu), add/rename/delete areas and locations. Every change saves straight
+// Locations tab. A list of areas down the side; the selected area's locations show
+// beside it as a grid of small boxes.
+// "Edit" switches on managing them: drag a location onto an area in the list (or use
+// its ⋯ menu), add/rename/delete areas and locations. Every change saves straight
 // away; moves update the screen first and roll back if the server rejects them.
 import { useState } from 'react';
 import {
@@ -8,16 +9,20 @@ import {
   createLocation, updateLocation, deleteLocation,
 } from '../../lib/api';
 import { useLocations } from '../../utils/useLocations';
+import AreaList from './AreaList';
 import AreaSection from './AreaSection';
-import NameInput from './NameInput';
 import '../../styles/LocationsPage.css';
 
 const collator = new Intl.Collator(undefined, { sensitivity: 'base', numeric: true });
 const byName = (a, b) => collator.compare(a.name, b.name);
 
 // `onOpenLocation({ id, name, area })` shows the inventory filtered to that location.
-function LocationsPage({ onOpenLocation }) {
+// `initialAreaId` / `onSelectArea(id)` let the app remember the selected area (null =
+// Unassigned) while the user is away on the Inventory page.
+function LocationsPage({ onOpenLocation, initialAreaId, onSelectArea }) {
   const { areas, setAreas, locations, setLocations, loading, error } = useLocations();
+  // The area the user picked; falls back to the first one when unset or gone.
+  const [chosenAreaId, setChosenAreaId] = useState(initialAreaId);
   const [editing, setEditing] = useState(false);
   const [addingArea, setAddingArea] = useState(false);
   const [actionError, setActionError] = useState(null);
@@ -44,12 +49,19 @@ function LocationsPage({ onOpenLocation }) {
     setActionError(null);
   }
 
+  function selectArea(id) {
+    setChosenAreaId(id);
+    onSelectArea?.(id);
+  }
+
   // ── Areas ──
 
+  // A new area opens straight away, ready for its first location.
   const handleAddArea = (name) => attempt(async () => {
     const area = await createArea(name);
     setAreas((prev) => [...prev, area]);
     setAddingArea(false);
+    selectArea(area.id);
   });
 
   const handleRenameArea = (id, name) => attempt(async () => {
@@ -107,31 +119,16 @@ function LocationsPage({ onOpenLocation }) {
   const sortedAreas = [...areas].sort(byName);
   const locationsIn = (areaId) => locations.filter((l) => l.areaId === areaId).sort(byName);
   const unassigned = locationsIn(null);
-
-  // Props every AreaSection shares.
-  const sectionProps = {
-    areas: sortedAreas,
-    editing,
-    draggingId,
-    onDragEnterArea: setDropAreaId,
-    onDragLeaveArea: (areaId) => setDropAreaId((prev) => (prev === areaId ? undefined : prev)),
-    onDropOnArea: handleDrop,
-    onDragStart: setDraggingId,
-    onDragEnd: endDrag,
-    onRenameArea: handleRenameArea,
-    onDeleteArea: handleDeleteArea,
-    onAddLocation: handleAddLocation,
-    onOpenLocation: (location) => onOpenLocation({
-      id: location.id,
-      name: location.name,
-      area: areas.find((a) => a.id === location.areaId)?.name ?? null,
-    }),
-    onMoveLocation: handleMoveLocation,
-    onRenameLocation: handleRenameLocation,
-    onDeleteLocation: handleDeleteLocation,
-  };
-
   const isEmpty = areas.length === 0 && locations.length === 0;
+
+  // Unassigned is listed when it has locations, or in edit mode as a drop target.
+  const showUnassigned = unassigned.length > 0 || (editing && !isEmpty);
+  const entries = [
+    ...sortedAreas.map((a) => ({ id: a.id, name: a.name, count: locationsIn(a.id).length })),
+    ...(showUnassigned ? [{ id: null, name: 'Unassigned', count: unassigned.length }] : []),
+  ];
+  const selectedId = entries.some((e) => e.id === chosenAreaId) ? chosenAreaId : entries[0]?.id;
+  const selectedArea = sortedAreas.find((a) => a.id === selectedId) ?? null;
 
   return (
     <div className="locations-page">
@@ -161,7 +158,7 @@ function LocationsPage({ onOpenLocation }) {
 
       {editing && (
         <p className="locations-hint">
-          Drag locations between areas, or use the menu on each card. Changes save as you go.
+          Drag a location onto an area in the list, or use its ⋯ menu. Changes save as you go.
         </p>
       )}
 
@@ -179,42 +176,53 @@ function LocationsPage({ onOpenLocation }) {
         </div>
       )}
 
-      {addingArea && (
-        <div className="area area--new">
-          <NameInput
-            label="New area name"
-            placeholder="New area name, e.g. Back Room"
-            className="name-input--heading"
-            onSubmit={handleAddArea}
-            onCancel={() => setAddingArea(false)}
-          />
-        </div>
-      )}
-
-      {isEmpty && !addingArea && (
+      {isEmpty && !addingArea ? (
         <p className="empty-state">
           No areas or locations yet. Click Edit, then “+ New area” to set up your first one.
         </p>
-      )}
+      ) : (
+        <div className="locations-layout">
+          <AreaList
+            entries={entries}
+            selectedId={selectedId}
+            editing={editing}
+            dropAreaId={dropAreaId}
+            draggingId={draggingId}
+            addingArea={addingArea}
+            onSelect={selectArea}
+            onAddArea={handleAddArea}
+            onCancelAddArea={() => setAddingArea(false)}
+            onDragEnterArea={setDropAreaId}
+            onDragLeaveArea={(areaId) => setDropAreaId((prev) => (prev === areaId ? undefined : prev))}
+            onDropOnArea={handleDrop}
+          />
 
-      {(unassigned.length > 0 || (editing && !isEmpty)) && (
-        <AreaSection
-          area={null}
-          locations={unassigned}
-          isDropTarget={dropAreaId === null}
-          {...sectionProps}
-        />
+          {selectedId !== undefined && (
+            <AreaSection
+              // A fresh section per area, so a half-finished rename doesn't carry over.
+              key={selectedId ?? 'unassigned'}
+              area={selectedArea}
+              locations={locationsIn(selectedId)}
+              areas={sortedAreas}
+              editing={editing}
+              draggingId={draggingId}
+              onDragStart={setDraggingId}
+              onDragEnd={endDrag}
+              onRenameArea={handleRenameArea}
+              onDeleteArea={handleDeleteArea}
+              onAddLocation={handleAddLocation}
+              onOpenLocation={(location) => onOpenLocation({
+                id: location.id,
+                name: location.name,
+                area: selectedArea?.name ?? null,
+              })}
+              onMoveLocation={handleMoveLocation}
+              onRenameLocation={handleRenameLocation}
+              onDeleteLocation={handleDeleteLocation}
+            />
+          )}
+        </div>
       )}
-
-      {sortedAreas.map((area) => (
-        <AreaSection
-          key={area.id}
-          area={area}
-          locations={locationsIn(area.id)}
-          isDropTarget={dropAreaId === area.id}
-          {...sectionProps}
-        />
-      ))}
     </div>
   );
 }

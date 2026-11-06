@@ -1,13 +1,14 @@
-// One area: a heading and a grid of its location cards. `area` is null for the
-// "Unassigned" group, which holds locations that aren't in any area yet.
-// In edit mode the whole section is a drop target for dragged location cards.
+// The selected area: a heading and a grid of its location cards, shown beside the area
+// list. `area` is null for the "Unassigned" group, which holds locations that aren't in
+// any area yet. In edit mode the heading gets Rename/Delete and the grid an
+// "+ Add location" tile; moving cards happens by dropping them on the area list.
 import { useState } from 'react';
 import LocationCard from './LocationCard';
 import NameInput from './NameInput';
 
 function AreaSection({
-  area, locations, areas, editing, isDropTarget, draggingId,
-  onDragEnterArea, onDragLeaveArea, onDropOnArea, onDragStart, onDragEnd,
+  area, locations, areas, editing, draggingId,
+  onDragStart, onDragEnd,
   onRenameArea, onDeleteArea, onAddLocation,
   onOpenLocation, onMoveLocation, onRenameLocation, onDeleteLocation,
 }) {
@@ -15,32 +16,13 @@ function AreaSection({
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [addingLocation, setAddingLocation] = useState(false);
 
-  const areaId = area?.id ?? null;
   const title = area?.name ?? 'Unassigned';
   const count = locations.length;
 
-  // Drag events only matter in edit mode.
-  const dropHandlers = editing ? {
-    onDragOver: (e) => {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
-      onDragEnterArea(areaId);
-    },
-    onDragLeave: (e) => {
-      // dragleave also fires when moving between the section's own children; ignore those.
-      if (!e.currentTarget.contains(e.relatedTarget)) onDragLeaveArea(areaId);
-    },
-    onDrop: (e) => {
-      e.preventDefault();
-      onDropOnArea(Number(e.dataTransfer.getData('text/plain')), areaId);
-    },
-  } : {};
-
   return (
     <section
-      className={`area${area ? '' : ' area--unassigned'}${editing ? ' area--editing' : ''}${isDropTarget ? ' area--drop' : ''}`}
+      className={`area${area ? '' : ' area--unassigned'}`}
       aria-label={title}
-      {...dropHandlers}
     >
       <header className="area__header">
         {renaming ? (
@@ -97,9 +79,9 @@ function AreaSection({
 
       {!area && (
         <p className="area__note">
-          {count > 0
-            ? `${count === 1 ? 'This location isn’t' : 'These locations aren’t'} in an area yet.${editing ? ' Drag them into one below.' : ' Click Edit to sort them.'}`
-            : 'Drop a location here to take it out of its area.'}
+          {count === 1 && `This location isn’t in an area yet.${editing ? ' Drag it onto an area in the list, or use its ⋯ menu.' : ' Click Edit to sort it.'}`}
+          {count > 1 && `These locations aren’t in an area yet.${editing ? ' Drag them onto an area in the list, or use their ⋯ menus.' : ' Click Edit to sort them.'}`}
+          {count === 0 && 'Drop a location on “Unassigned” in the list to take it out of its area.'}
         </p>
       )}
 
@@ -145,7 +127,7 @@ function AreaSection({
         ))}
 
         {!editing && area && count === 0 && (
-          <p className="area__empty">No locations yet.</p>
+          <p className="area__empty">No locations yet. Click Edit to add one.</p>
         )}
       </div>
     </section>
